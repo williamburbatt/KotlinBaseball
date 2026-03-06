@@ -4,7 +4,6 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
-    // alias(libs.plugins.google.services) // Commented out until google-services.json is added
 }
 
 android {
@@ -55,15 +54,18 @@ dependencies {
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
     
     // Navigation & ViewModel
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     
-    // Retrofit & OkHttp
+    // Retrofit & OkHttp & Moshi
     implementation(libs.retrofit.core)
-    implementation(libs.retrofit.gson)
+    implementation(libs.retrofit.moshi)
     implementation(libs.okhttp.logging)
+    implementation(libs.moshi.kotlin)
+    ksp(libs.moshi.kotlin.codegen)
     
     // Firebase (Commented out until setup)
     /*

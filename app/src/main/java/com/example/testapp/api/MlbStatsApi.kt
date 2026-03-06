@@ -12,11 +12,17 @@ interface MlbStatsApi {
     suspend fun getPlayerStats(
         @Path("playerId") playerId: Int,
         @Query("stats") stats: String = "season",
-        @Query("sportId") sportId: Int = 11
+        @Query("sportId") sportId: Int = 11,
+        @Query("season") season: Int? = null,
+        @Query("startDate") startDate: String? = null,
+        @Query("endDate") endDate: String? = null
     ): PlayerStatsResponse
     
     @GET("v1/teams/{teamId}/roster")
-    suspend fun getTeamRoster(@Path("teamId") teamId: Int): RosterResponse
+    suspend fun getTeamRoster(
+        @Path("teamId") teamId: Int,
+        @Query("season") season: Int? = null
+    ): RosterResponse
 }
 
 data class TeamResponse(val teams: List<Team>)

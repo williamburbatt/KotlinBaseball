@@ -2,6 +2,9 @@ package com.example.testapp.repository
 
 import com.example.testapp.api.MlbStatsApi
 import com.example.testapp.model.Player
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
@@ -11,22 +14,40 @@ import javax.inject.Singleton
 class PlayerRepository @Inject constructor(
     private val api: MlbStatsApi
 ) {
-    fun getPlayers(): Flow<List<Player>> = flow {
+    fun getPlayers(teamId: Int, year: Int): Flow<List<Player>> = flow {
         try {
-            // Let's get the roster for a MiLB team (e.g., Somerset Patriots ID: 117)
-            val rosterResponse = api.getTeamRoster(117)
-            val players = rosterResponse.roster.map { rosterPlayer ->
-                Player(
-                    id = rosterPlayer.person.id.toString(),
-                    name = rosterPlayer.person.fullName,
-                    team = "Somerset Patriots", 
-                    position = rosterPlayer.position.abbreviation,
-                    average = 0.0, 
-                    homeRuns = 0,
-                    rbi = 0
-                )
+            val rosterResponse = api.getTeamRoster(teamId, season = year)
+            
+            val playersWithStats = coroutineScope {
+                rosterResponse.roster.map { rosterPlayer ->
+                    async {
+                        val playerId = rosterPlayer.person.id
+                        val statsResponse = try {
+                            api.getPlayerStats(
+                                playerId = playerId,
+                                stats = "season",
+                                season = year
+                            )
+                        } catch (e: Exception) {
+                            null
+                        }
+
+                        val playerStats = statsResponse?.stats?.firstOrNull()?.splits?.firstOrNull()?.stat
+                        
+                        Player(
+                            id = playerId.toString(),
+                            name = rosterPlayer.person.fullName,
+                            team = "Team $teamId",
+                            position = rosterPlayer.position.abbreviation,
+                            average = playerStats?.avg?.toDoubleOrNull() ?: 0.0,
+                            homeRuns = playerStats?.homeRuns ?: 0,
+                            rbi = playerStats?.rbi ?: 0
+                        )
+                    }
+                }.awaitAll()
             }
-            emit(players)
+            
+            emit(playersWithStats)
         } catch (e: Exception) {
             e.printStackTrace()
             emit(emptyList())
