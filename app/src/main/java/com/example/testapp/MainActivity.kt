@@ -327,7 +327,12 @@ fun PlayerCard(player: Player) {
                         StatItem(label = "RBI", value = player.rbi.toString())
                     }
                 } else {
-                    Text(text = "Pitcher", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
+                    Row(modifier = Modifier.padding(top = 2.dp)) {
+                        StatItem(label = "ERA", value = player.era)
+                        StatItem(label = "W-L", value = "${player.wins}-${player.losses}")
+                        StatItem(label = "SO", value = player.strikeOuts.toString())
+                        StatItem(label = "IP", value = player.inningsPitched)
+                    }
                 }
             }
         }

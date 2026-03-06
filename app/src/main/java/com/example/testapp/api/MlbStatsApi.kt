@@ -37,7 +37,14 @@ data class PlayerStatsResponse(val stats: List<StatContainer>)
 data class StatContainer(val splits: List<StatSplit>)
 data class StatSplit(val stat: PlayerStats)
 data class PlayerStats(
+    // Batting
     val avg: String?,
     val homeRuns: Int?,
-    val rbi: Int?
+    val rbi: Int?,
+    // Pitching
+    val era: String?,
+    val wins: Int?,
+    val losses: Int?,
+    val strikeOuts: Int?,
+    val inningsPitched: String?
 )

@@ -22,11 +22,15 @@ class PlayerRepository @Inject constructor(
                 rosterResponse.roster.map { rosterPlayer ->
                     async {
                         val playerId = rosterPlayer.person.id
+                        val position = rosterPlayer.position.abbreviation
+                        val isPitcher = position == "P" || position == "SP" || position == "RP" || position == "TWP"
+                        
                         val statsResponse = try {
                             api.getPlayerStats(
                                 playerId = playerId,
                                 stats = "season",
-                                season = year
+                                season = year,
+                                sportId = if (teamId < 200) 1 else 11 // Simplified check for MLB vs MiLB
                             )
                         } catch (e: Exception) {
                             null
@@ -38,10 +42,15 @@ class PlayerRepository @Inject constructor(
                             id = playerId.toString(),
                             name = rosterPlayer.person.fullName,
                             team = "Team $teamId",
-                            position = rosterPlayer.position.abbreviation,
+                            position = position,
                             average = playerStats?.avg?.toDoubleOrNull() ?: 0.0,
                             homeRuns = playerStats?.homeRuns ?: 0,
-                            rbi = playerStats?.rbi ?: 0
+                            rbi = playerStats?.rbi ?: 0,
+                            era = playerStats?.era ?: "-.--",
+                            wins = playerStats?.wins ?: 0,
+                            losses = playerStats?.losses ?: 0,
+                            strikeOuts = playerStats?.strikeOuts ?: 0,
+                            inningsPitched = playerStats?.inningsPitched ?: "0.0"
                         )
                     }
                 }.awaitAll()
