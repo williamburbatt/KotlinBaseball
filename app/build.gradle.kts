@@ -67,6 +67,10 @@ dependencies {
     implementation(libs.moshi.kotlin)
     ksp(libs.moshi.kotlin.codegen)
     
+    // Coil (Image Loading)
+    implementation(libs.coil.compose)
+    implementation(libs.coil.svg)
+    
     // Firebase (Commented out until setup)
     /*
     implementation(platform(libs.firebase.bom))
