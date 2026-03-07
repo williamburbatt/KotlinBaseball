@@ -18,7 +18,7 @@ class TeamRepository @Inject constructor(
                 Team(
                     id = it.id,
                     name = it.name,
-                    teamName = it.teamName
+                    teamName = it.teamName ?: ""
                 )
             }
             emit(teams)
