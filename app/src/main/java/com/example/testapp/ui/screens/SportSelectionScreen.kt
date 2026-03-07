@@ -30,8 +30,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.testapp.R
+import com.example.testapp.ui.theme.TestAppTheme
 
 @Composable
 fun SportSelectionScreen(onSportClick: (Int) -> Unit) {
@@ -170,5 +172,13 @@ fun SportCard(
                 tint = MaterialTheme.colorScheme.outlineVariant
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SportSelectionPreview() {
+    TestAppTheme {
+        SportSelectionScreen(onSportClick = {})
     }
 }

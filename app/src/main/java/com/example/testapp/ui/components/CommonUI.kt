@@ -35,7 +35,8 @@ fun TeamLogo(
     teamId: Int, 
     modifier: Modifier = Modifier,
     sharedTransitionScope: SharedTransitionScope? = null,
-    animatedVisibilityScope: AnimatedVisibilityScope? = null
+    animatedVisibilityScope: AnimatedVisibilityScope? = null,
+    padding: Int = 8
 ) {
     val logoUrl = "https://www.mlbstatic.com/team-logos/$teamId.svg"
     
@@ -57,7 +58,7 @@ fun TeamLogo(
         shadowElevation = 2.dp
     ) {
         Box(
-            modifier = Modifier.padding(8.dp),
+            modifier = Modifier.padding(padding.dp),
             contentAlignment = Alignment.Center
         ) {
             AsyncImage(

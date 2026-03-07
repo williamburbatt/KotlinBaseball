@@ -7,80 +7,6 @@ import kotlinx.serialization.Serializable
 import javax.inject.Inject
 import javax.inject.Singleton
 
-@Singleton
-class MlbStatsApi @Inject constructor(
-    private val client: HttpClient
-) {
-    private val baseUrl = "https://statsapi.mlb.com/api"
-
-    suspend fun getTeams(sportId: Int = 1): TeamResponse {
-        return client.get("$baseUrl/v1/teams") {
-            parameter("sportId", sportId)
-        }.body()
-    }
-
-    suspend fun getPlayerDetails(
-        playerId: Int,
-        hydrate: String = "currentTeam,stats(group=[hitting,pitching],type=[yearByYear,season])"
-    ): PeopleResponse {
-        return client.get("$baseUrl/v1/people/$playerId") {
-            parameter("hydrate", hydrate)
-        }.body()
-    }
-
-    suspend fun getPlayerStats(
-        playerId: Int,
-        stats: String = "season",
-        sportId: Int = 1,
-        season: Int? = null,
-        gameType: String = "R",
-        group: String? = null
-    ): PlayerStatsResponse {
-        return client.get("$baseUrl/v1/people/$playerId/stats") {
-            parameter("stats", stats)
-            parameter("sportId", sportId)
-            parameter("season", season)
-            parameter("gameType", gameType)
-            if (group != null) {
-                parameter("group", group)
-            }
-        }.body()
-    }
-
-    suspend fun getTeamRoster(
-        teamId: Int,
-        season: Int? = null
-    ): RosterResponse {
-        return client.get("$baseUrl/v1/teams/$teamId/roster") {
-            parameter("season", season)
-        }.body()
-    }
-
-    suspend fun getSchedule(
-        sportId: Int = 1,
-        date: String,
-        hydrate: String = "team,linescore"
-    ): ScheduleResponse {
-        return client.get("$baseUrl/v1/schedule") {
-            parameter("sportId", sportId)
-            parameter("date", date)
-            parameter("hydrate", hydrate)
-        }.body()
-    }
-
-    suspend fun getBoxscore(gamePk: Int): BoxscoreResponse {
-        return client.get("$baseUrl/v1/game/$gamePk/boxscore").body()
-    }
-
-    suspend fun searchPlayers(query: String): PeopleResponse {
-        return client.get("$baseUrl/v1/people/search") {
-            parameter("names", query)
-            parameter("activeStatus", "BOTH")
-            parameter("hydrate", "currentTeam")
-        }.body()
-    }
-}
-
 @Serializable
 data class TeamResponse(val teams: List<Team>)
 @Serializable
@@ -189,7 +115,7 @@ data class Game(
     val gameDate: String,
     val teams: GameTeams,
     val status: GameStatus,
-    val linescore: Linescore? = null
+    val linescore: LinescoreResponse? = null
 )
 @Serializable
 data class GameTeams(val away: TeamScore, val home: TeamScore)
@@ -197,8 +123,33 @@ data class GameTeams(val away: TeamScore, val home: TeamScore)
 data class TeamScore(val team: Team, val score: Int? = null)
 @Serializable
 data class GameStatus(val abstractGameState: String, val detailedState: String)
+
 @Serializable
-data class Linescore(val teams: LinescoreTeams)
+data class LinescoreResponse(
+    val innings: List<Inning>? = null,
+    val teams: LinescoreTeams,
+    val currentInning: Int? = null,
+    val currentInningOrdinal: String? = null,
+    val inningHalf: String? = null,
+    val isTopInning: Boolean? = null,
+    val scheduledInnings: Int? = null
+)
+
+@Serializable
+data class Inning(
+    val num: Int,
+    val ordinalNum: String,
+    val home: InningScore,
+    val away: InningScore
+)
+
+@Serializable
+data class InningScore(
+    val runs: Int? = null,
+    val errors: Int? = null,
+    val hits: Int? = null
+)
+
 @Serializable
 data class LinescoreTeams(val away: LinescoreTeam, val home: LinescoreTeam)
 @Serializable
@@ -219,7 +170,7 @@ data class BoxscorePitchingStats(val runs: Int? = null, val hits: Int? = null)
 @Serializable
 data class BoxscoreFieldingStats(val errors: Int? = null)
 @Serializable
-data class BoxscorePlayer(val person: Person, val stats: BoxscorePlayerStats, val position: Position, val gameStatus: BoxscoreGameStatus)
+data class BoxscorePlayer(val person: Person, val stats: BoxscorePlayerStats, val position: Position, val gameStatus: BoxscoreGameStatus? = null)
 @Serializable
 data class BoxscoreGameStatus(val isCurrentBatter: Boolean? = false, val isCurrentPitcher: Boolean? = false)
 @Serializable
@@ -228,3 +179,81 @@ data class BoxscorePlayerStats(val batting: BattingStats? = null, val pitching: 
 data class BattingStats(val atBats: Int? = null, val runs: Int? = null, val hits: Int? = null, val rbi: Int? = null, val homeRuns: Int? = null, val leftOnBase: Int? = null)
 @Serializable
 data class PitchingStats(val inningsPitched: String? = null, val hits: Int? = null, val runs: Int? = null, val earnedRuns: Int? = null, val strikeOuts: Int? = null, val baseOnBalls: Int? = null)
+
+@Singleton
+class MlbStatsApi @Inject constructor(
+    private val client: HttpClient
+) {
+    private val baseUrl = "https://statsapi.mlb.com/api"
+
+    suspend fun getTeams(sportId: Int = 1): TeamResponse {
+        return client.get("$baseUrl/v1/teams") {
+            parameter("sportId", sportId)
+        }.body()
+    }
+
+    suspend fun getPlayerDetails(
+        playerId: Int,
+        hydrate: String = "currentTeam,stats(group=[hitting,pitching],type=[yearByYear,season])"
+    ): PeopleResponse {
+        return client.get("$baseUrl/v1/people/$playerId") {
+            parameter("hydrate", hydrate)
+        }.body()
+    }
+
+    suspend fun getPlayerStats(
+        playerId: Int,
+        stats: String = "season",
+        sportId: Int = 1,
+        season: Int? = null,
+        gameType: String = "R",
+        group: String? = null
+    ): PlayerStatsResponse {
+        return client.get("$baseUrl/v1/people/$playerId/stats") {
+            parameter("stats", stats)
+            parameter("sportId", sportId)
+            parameter("season", season)
+            parameter("gameType", gameType)
+            if (group != null) {
+                parameter("group", group)
+            }
+        }.body()
+    }
+
+    suspend fun getTeamRoster(
+        teamId: Int,
+        season: Int? = null
+    ): RosterResponse {
+        return client.get("$baseUrl/v1/teams/$teamId/roster") {
+            parameter("season", season)
+        }.body()
+    }
+
+    suspend fun getSchedule(
+        sportId: Int = 1,
+        date: String,
+        hydrate: String = "team,linescore"
+    ): ScheduleResponse {
+        return client.get("$baseUrl/v1/schedule") {
+            parameter("sportId", sportId)
+            parameter("date", date)
+            parameter("hydrate", hydrate)
+        }.body()
+    }
+
+    suspend fun getBoxscore(gamePk: Int): BoxscoreResponse {
+        return client.get("$baseUrl/v1/game/$gamePk/boxscore").body()
+    }
+
+    suspend fun getLinescore(gamePk: Int): LinescoreResponse {
+        return client.get("$baseUrl/v1/game/$gamePk/linescore").body()
+    }
+
+    suspend fun searchPlayers(query: String): PeopleResponse {
+        return client.get("$baseUrl/v1/people/search") {
+            parameter("names", query)
+            parameter("activeStatus", "BOTH")
+            parameter("hydrate", "currentTeam")
+        }.body()
+    }
+}

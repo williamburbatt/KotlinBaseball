@@ -46,10 +46,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.testapp.model.Game
+import com.example.testapp.ui.theme.TestAppTheme
 import com.example.testapp.ui.viewmodels.GameViewModel
 import java.time.Instant
 import java.time.LocalDate
@@ -58,7 +60,6 @@ import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GameListScreen(
     onGameClick: (Game) -> Unit,
@@ -67,6 +68,25 @@ fun GameListScreen(
     val selectedDate by viewModel.selectedDate.collectAsStateWithLifecycle()
     val games by viewModel.games.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+
+    GameListContent(
+        selectedDate = selectedDate,
+        games = games,
+        isLoading = isLoading,
+        onDateSelected = { viewModel.updateDate(it) },
+        onGameClick = onGameClick
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun GameListContent(
+    selectedDate: LocalDate,
+    games: List<Game>,
+    isLoading: Boolean,
+    onDateSelected: (LocalDate) -> Unit,
+    onGameClick: (Game) -> Unit
+) {
     var showDatePicker by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -104,7 +124,7 @@ fun GameListScreen(
 
                     DateScroller(
                         selectedDate = selectedDate,
-                        onDateSelected = { viewModel.updateDate(it) }
+                        onDateSelected = onDateSelected
                     )
                     
                     Spacer(modifier = Modifier.height(8.dp))
@@ -136,7 +156,6 @@ fun GameListScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 12.dp)
                 ) {
-                    // Added key = { it.id } to optimize performance
                     items(
                         items = games,
                         key = { game -> game.id }
@@ -151,7 +170,7 @@ fun GameListScreen(
             M3DatePickerDialog(
                 initialDate = selectedDate,
                 onDateSelected = { 
-                    it?.let { viewModel.updateDate(it) }
+                    it?.let { onDateSelected(it) }
                     showDatePicker = false
                 },
                 onDismiss = { showDatePicker = false }
@@ -358,6 +377,25 @@ fun TeamScoreRow(teamName: String, score: Int?, isWinner: Boolean) {
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Black,
             color = if (isWinner) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun GameListPreview() {
+    val mockGames = listOf(
+        Game(1, "New York Yankees", "Boston Red Sox", 5, 2, "Final", "7:05 PM"),
+        Game(2, "Los Angeles Dodgers", "San Francisco Giants", 3, 4, "Final", "10:10 PM"),
+        Game(3, "Chicago Cubs", "St. Louis Cardinals", null, null, "Preview", "2:20 PM")
+    )
+    TestAppTheme {
+        GameListContent(
+            selectedDate = LocalDate.now(),
+            games = mockGames,
+            isLoading = false,
+            onDateSelected = {},
+            onGameClick = {}
         )
     }
 }

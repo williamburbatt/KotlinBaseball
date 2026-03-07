@@ -25,11 +25,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.testapp.model.Team
 import com.example.testapp.ui.components.TeamLogo
+import com.example.testapp.ui.theme.TestAppTheme
 import com.example.testapp.ui.viewmodels.TeamViewModel
 
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -42,6 +44,22 @@ fun TeamListScreen(
 ) {
     val teams by viewModel.teams.collectAsStateWithLifecycle()
 
+    TeamListContent(
+        teams = teams,
+        onTeamClick = onTeamClick,
+        sharedTransitionScope = sharedTransitionScope,
+        animatedVisibilityScope = animatedVisibilityScope
+    )
+}
+
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+fun TeamListContent(
+    teams: List<Team>,
+    onTeamClick: (Int) -> Unit,
+    sharedTransitionScope: SharedTransitionScope? = null,
+    animatedVisibilityScope: AnimatedVisibilityScope? = null
+) {
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
         LazyColumn(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
             items(
@@ -64,8 +82,8 @@ fun TeamListScreen(
 fun TeamCard(
     team: Team, 
     onClick: () -> Unit,
-    sharedTransitionScope: SharedTransitionScope,
-    animatedVisibilityScope: AnimatedVisibilityScope
+    sharedTransitionScope: SharedTransitionScope? = null,
+    animatedVisibilityScope: AnimatedVisibilityScope? = null
 ) {
     Card(
         modifier = Modifier
@@ -92,5 +110,19 @@ fun TeamCard(
                 Text(text = team.teamName, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
             }
         }
+    }
+}
+
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Preview(showBackground = true)
+@Composable
+fun TeamListPreview() {
+    val mockTeams = listOf(
+        Team(147, "New York Yankees", "Yankees", "NYY"),
+        Team(111, "Boston Red Sox", "Red Sox", "BOS"),
+        Team(141, "Toronto Blue Jays", "Blue Jays", "TOR")
+    )
+    TestAppTheme {
+        TeamListContent(teams = mockTeams, onTeamClick = {})
     }
 }

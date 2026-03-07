@@ -57,6 +57,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -68,11 +69,12 @@ import com.example.testapp.ui.components.SectionHeader
 import com.example.testapp.ui.components.StatItem
 import com.example.testapp.ui.components.TeamLogo
 import com.example.testapp.ui.theme.TeamColors
+import com.example.testapp.ui.theme.TestAppTheme
 import com.example.testapp.ui.viewmodels.PlayerViewModel
 import java.util.Calendar
 import java.util.Locale
 
-@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun PlayerListScreen(
     sharedTransitionScope: SharedTransitionScope,
@@ -83,15 +85,41 @@ fun PlayerListScreen(
     val selectedYear by viewModel.selectedYear.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val selectedPlayer by viewModel.selectedPlayer.collectAsStateWithLifecycle()
-    var showYearDropdown by remember { mutableStateOf(false) }
     
-    val teamId = viewModel.teamId
+    PlayerListContent(
+        teamId = viewModel.teamId,
+        groupedPlayers = groupedPlayers,
+        selectedYear = selectedYear,
+        isLoading = isLoading,
+        selectedPlayer = selectedPlayer,
+        onYearUpdate = { viewModel.updateYear(it) },
+        onPlayerSelect = { viewModel.selectPlayer(it) },
+        onPlayerClear = { viewModel.clearSelectedPlayer() },
+        sharedTransitionScope = sharedTransitionScope,
+        animatedVisibilityScope = animatedVisibilityScope
+    )
+}
+
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+fun PlayerListContent(
+    teamId: Int,
+    groupedPlayers: List<com.example.testapp.ui.viewmodels.PlayerGroup>,
+    selectedYear: Int,
+    isLoading: Boolean,
+    selectedPlayer: Player?,
+    onYearUpdate: (Int) -> Unit,
+    onPlayerSelect: (Int) -> Unit,
+    onPlayerClear: () -> Unit,
+    sharedTransitionScope: SharedTransitionScope? = null,
+    animatedVisibilityScope: AnimatedVisibilityScope? = null
+) {
+    var showYearDropdown by remember { mutableStateOf(false) }
     val currentYear = Calendar.getInstance().get(Calendar.YEAR)
     val years = (2020..currentYear).reversed().toList()
 
-    // Handle back button to close player detail overlay instead of navigating back to team list
     BackHandler(enabled = selectedPlayer != null) {
-        viewModel.clearSelectedPlayer()
+        onPlayerClear()
     }
 
     Scaffold(
@@ -131,7 +159,7 @@ fun PlayerListScreen(
                                 DropdownMenuItem(
                                     text = { Text(year.toString()) },
                                     onClick = {
-                                        viewModel.updateYear(year)
+                                        onYearUpdate(year)
                                         showYearDropdown = false
                                     }
                                 )
@@ -155,7 +183,7 @@ fun PlayerListScreen(
                             items = group.players,
                             key = { player -> player.id }
                         ) { player ->
-                            PlayerCard(player = player, onClick = { viewModel.selectPlayer(player.id.toInt()) })
+                            PlayerCard(player = player, onClick = { onPlayerSelect(player.id.toInt()) })
                         }
                         item { Spacer(modifier = Modifier.height(16.dp)) }
                     }
@@ -170,7 +198,7 @@ fun PlayerListScreen(
                 selectedPlayer?.let { player ->
                     DetailedPlayerCard(
                         player = player,
-                        onClose = { viewModel.clearSelectedPlayer() }
+                        onClose = onPlayerClear
                     )
                 }
             }
@@ -574,4 +602,30 @@ fun RowScope.StatCell(text: String, weight: Float = 1f, isYear: Boolean = false)
         fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
         maxLines = 1
     )
+}
+
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Preview(showBackground = true)
+@Composable
+fun PlayerListPreview() {
+    val mockPlayers = listOf(
+        Player(id = "1", name = "Aaron Judge", team = "Yankees", teamId = 161, position = "OF", number = "99", age = 32),
+        Player(id = "2", name = "Gerrit Cole", team = "Yankees", teamId = 161, position = "SP", number = "45", age = 33)
+    )
+    val mockGroups = listOf(
+        com.example.testapp.ui.viewmodels.PlayerGroup("Outfielders", listOf(mockPlayers[0])),
+        com.example.testapp.ui.viewmodels.PlayerGroup("Pitchers", listOf(mockPlayers[1]))
+    )
+    TestAppTheme {
+        PlayerListContent(
+            teamId = 161,
+            groupedPlayers = mockGroups,
+            selectedYear = 2024,
+            isLoading = false,
+            selectedPlayer = null,
+            onYearUpdate = {},
+            onPlayerSelect = {},
+            onPlayerClear = {}
+        )
+    }
 }
