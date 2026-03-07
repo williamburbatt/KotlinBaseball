@@ -25,7 +25,7 @@ class PlayerRepository @Inject constructor(
                 rosterResponse.roster.map { rosterPlayer ->
                     async {
                         val playerId = rosterPlayer.person.id
-                        val position = rosterPlayer.position.abbreviation
+                        val position = rosterPlayer.position.abbreviation ?: ""
                         
                         val isPitcher = position == "P" || position == "SP" || position == "RP" || position == "TWP"
                         val group = if (isPitcher) "pitching" else "hitting"
@@ -76,10 +76,14 @@ class PlayerRepository @Inject constructor(
             val currentYearInt = Calendar.getInstance().get(Calendar.YEAR)
             val currentYearStr = currentYearInt.toString()
             
-            val personResponse = api.getPlayerDetails(playerId, hydrate = "currentTeam")
+            // Fix: Include primaryPosition in hydrate to ensure we know if they are a pitcher
+            val personResponse = api.getPlayerDetails(playerId, hydrate = "currentTeam,primaryPosition")
             val person = personResponse.people.firstOrNull()
             
             if (person != null) {
+                val position = person.primaryPosition?.abbreviation ?: ""
+                val isPitcher = position == "P" || position == "SP" || position == "RP" || position == "TWP"
+                
                 val historyMap = mutableMapOf<String, YearlyStats>()
                 val milbHistoryMap = mutableMapOf<String, YearlyStats>()
 
@@ -88,42 +92,26 @@ class PlayerRepository @Inject constructor(
                 coroutineScope {
                     sportIds.map { sportId ->
                         async {
-                            val hitting = try { api.getPlayerStats(playerId, stats = "yearByYear", group = "hitting", sportId = sportId) } catch (e: Exception) { null }
-                            val pitching = try { api.getPlayerStats(playerId, stats = "yearByYear", group = "pitching", sportId = sportId) } catch (e: Exception) { null }
+                            // Fetch stats relevant to the player's primary position
+                            // If they are a pitcher, we prioritize pitching stats.
+                            val group = if (isPitcher) "pitching" else "hitting"
+                            
+                            val statsResponse = try { 
+                                api.getPlayerStats(playerId, stats = "yearByYear", group = group, sportId = sportId) 
+                            } catch (e: Exception) { null }
                             
                             val targetMap = if (sportId == 1) historyMap else milbHistoryMap
-                            val leagueSuffix = when(sportId) {
-                                1 -> "MLB"
-                                11 -> "AAA"
-                                12 -> "AA"
-                                13 -> "A+"
-                                14 -> "A"
-                                else -> "MiLB"
-                            }
+                            val leagueSuffix = getLeagueSuffix(sportId)
 
-                            hitting?.stats?.forEach { container ->
+                            statsResponse?.stats?.forEach { container ->
                                 container.splits.forEach { split ->
                                     val year = split.season ?: return@forEach
                                     val teamId = split.team?.id
                                     val teamDisplay = TeamColors.getTeamAbbreviation(teamId) ?: split.team?.abbreviation ?: split.team?.name ?: leagueSuffix
                                     val teamKey = "${year}_${teamId ?: 0}"
-                                    val stat = mapApiStatsToYearly(split.stat, year, teamDisplay, false)
+                                    val stat = mapApiStatsToYearly(split.stat, year, teamDisplay, isPitcher)
                                     synchronized(targetMap) {
                                         targetMap[teamKey] = stat
-                                    }
-                                }
-                            }
-                            
-                            pitching?.stats?.forEach { container ->
-                                container.splits.forEach { split ->
-                                    val year = split.season ?: return@forEach
-                                    val teamId = split.team?.id
-                                    val teamDisplay = TeamColors.getTeamAbbreviation(teamId) ?: split.team?.abbreviation ?: split.team?.name ?: leagueSuffix
-                                    val teamKey = "${year}_${teamId ?: 0}"
-                                    val stat = mapApiStatsToYearly(split.stat, year, teamDisplay, true)
-                                    synchronized(targetMap) {
-                                        val existing = targetMap[teamKey]
-                                        targetMap[teamKey] = if (existing != null) mergeStats(existing, stat) else stat
                                     }
                                 }
                             }
@@ -145,6 +133,7 @@ class PlayerRepository @Inject constructor(
                     teamId = currentTeamId,
                     team = person.currentTeam?.name ?: "",
                     number = person.primaryNumber ?: "",
+                    position = position,
                     age = person.currentAge ?: 0,
                     birthDate = person.birthDate ?: "",
                     birthLocation = birthPlace,
@@ -167,6 +156,17 @@ class PlayerRepository @Inject constructor(
         }
     }
 
+    private fun getLeagueSuffix(sportId: Int): String {
+        return when(sportId) {
+            1 -> "MLB"
+            11 -> "AAA"
+            12 -> "AA"
+            13 -> "A+"
+            14 -> "A"
+            else -> "MiLB"
+        }
+    }
+
     private fun mapApiStatsToYearly(apiStats: com.example.testapp.api.PlayerStats, year: String, team: String, isPitching: Boolean): YearlyStats {
         return if (isPitching) {
             YearlyStats(
@@ -176,11 +176,13 @@ class PlayerRepository @Inject constructor(
                 l = apiStats.losses ?: 0,
                 k = apiStats.strikeouts ?: apiStats.strikeOuts ?: 0,
                 p_bb = apiStats.baseOnBalls ?: 0,
+                h = apiStats.hits ?: 0, // Hits allowed for pitchers
                 ip = apiStats.inningsPitched ?: "0.0",
                 whip = apiStats.whip ?: "-.--",
                 gs = apiStats.gamesStarted ?: 0,
                 sv = apiStats.saves ?: 0,
-                games = apiStats.gamesPlayed ?: 0
+                games = apiStats.gamesPlayed ?: 0,
+                earnedRuns = apiStats.earnedRuns ?: 0
             )
         } else {
             YearlyStats(
@@ -205,7 +207,7 @@ class PlayerRepository @Inject constructor(
 
     private fun mergeStats(h: YearlyStats, p: YearlyStats): YearlyStats {
         return h.copy(
-            era = p.era, w = p.w, l = p.l, k = p.k, p_bb = p.p_bb, ip = p.ip, whip = p.whip, gs = p.gs, sv = p.sv
+            era = p.era, w = p.w, l = p.l, k = p.k, p_bb = p.p_bb, h = p.h, ip = p.ip, whip = p.whip, gs = p.gs, sv = p.sv, earnedRuns = p.earnedRuns
         )
     }
 }

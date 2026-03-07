@@ -55,5 +55,6 @@ data class YearlyStats(
     val ip: String = "0.0",
     val whip: String = "-.--",
     val gs: Int = 0,
-    val sv: Int = 0
+    val sv: Int = 0,
+    val earnedRuns: Int? = null
 )

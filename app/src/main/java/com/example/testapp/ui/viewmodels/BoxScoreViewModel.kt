@@ -8,10 +8,14 @@ import com.example.testapp.model.BoxScore
 import com.example.testapp.repository.GameRepository
 import com.example.testapp.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 @HiltViewModel
@@ -31,17 +35,29 @@ class BoxScoreViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    private val _lastUpdated = MutableStateFlow<String?>(null)
+    val lastUpdated: StateFlow<String?> = _lastUpdated.asStateFlow()
+
+    private var observationJob: Job? = null
+
     init {
-        loadBoxScore()
+        observeLiveBoxScore()
     }
 
-    private fun loadBoxScore() {
-        viewModelScope.launch {
-            _isLoading.value = true
-            repository.getBoxScore(gameId).collect {
-                _boxScore.value = it
-                _isLoading.value = false
-            }
+    private fun observeLiveBoxScore() {
+        observationJob?.cancel()
+        observationJob = viewModelScope.launch {
+            repository.getLiveBoxScore(gameId)
+                .onStart { _isLoading.value = true }
+                .collect { newBoxScore ->
+                    _boxScore.value = newBoxScore
+                    _isLoading.value = false
+                    _lastUpdated.value = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+                }
         }
+    }
+
+    fun refresh() {
+        observeLiveBoxScore()
     }
 }

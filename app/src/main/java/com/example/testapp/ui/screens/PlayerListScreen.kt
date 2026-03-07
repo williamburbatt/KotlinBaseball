@@ -70,6 +70,7 @@ import com.example.testapp.ui.components.TeamLogo
 import com.example.testapp.ui.theme.TeamColors
 import com.example.testapp.ui.viewmodels.PlayerViewModel
 import java.util.Calendar
+import java.util.Locale
 
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -351,7 +352,9 @@ fun DetailedPlayerCard(player: Player, onClose: () -> Unit) {
                     }
                 } else {
                     item {
-                        StatsTable(player, statsToShow)
+                        // Chronological order: oldest year first
+                        val sortedStats = statsToShow.sortedBy { it.year }
+                        StatsTable(player, sortedStats)
                     }
                 }
                 
@@ -418,12 +421,13 @@ fun HighlightStat(label: String, value: String, accentColor: Color) {
 fun StatsTable(player: Player, stats: List<YearlyStats>) {
     val isPitcher = player.position.contains("P")
     val headers = if (!isPitcher) {
-        listOf("Year", "Team", "G", "HR", "RBI", "AVG", "OPS")
+        listOf("Year", "Team", "G", "HR", "RBI", "AVG", "OPS", "H", "R", "SB")
     } else {
-        listOf("Year", "Team", "W-L", "ERA", "IP", "SO", "WHIP")
+        listOf("Year", "Team", "W-L", "ERA", "IP", "SO", "WHIP", "GS", "SV", "BB")
     }
 
     Column(modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface, RoundedCornerShape(4.dp))) {
+        // Table Header
         Surface(color = Color(0xFF455A64)) {
             Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
                 headers.forEachIndexed { index, header ->
@@ -439,6 +443,7 @@ fun StatsTable(player: Player, stats: List<YearlyStats>) {
             }
         }
 
+        // Yearly Rows
         stats.forEach { yearly ->
             Row(
                 modifier = Modifier
@@ -454,6 +459,9 @@ fun StatsTable(player: Player, stats: List<YearlyStats>) {
                     StatCell(yearly.rbi.toString())
                     StatCell(yearly.avg)
                     StatCell(yearly.ops)
+                    StatCell(yearly.h.toString())
+                    StatCell(yearly.r.toString())
+                    StatCell(yearly.sb.toString())
                 } else {
                     StatCell(yearly.year, 1.2f, isYear = true)
                     StatCell(yearly.team, 1.2f)
@@ -462,9 +470,95 @@ fun StatsTable(player: Player, stats: List<YearlyStats>) {
                     StatCell(yearly.ip)
                     StatCell(yearly.k.toString())
                     StatCell(yearly.whip)
+                    StatCell(yearly.gs.toString())
+                    StatCell(yearly.sv.toString())
+                    StatCell(yearly.p_bb.toString())
                 }
             }
             HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+        }
+
+        // Career Summary Row
+        if (stats.isNotEmpty()) {
+            val careerYears = stats.map { it.year }.distinct().size
+            Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val careerLabel = "$careerYears YEAR CAREER"
+                    Text(
+                        text = careerLabel,
+                        modifier = Modifier.weight(2.4f).padding(start = 8.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    
+                    if (!isPitcher) {
+                        val totalAB = stats.sumOf { it.ab }
+                        val totalH = stats.sumOf { it.h }
+                        val totalHR = stats.sumOf { it.hr }
+                        val totalRBI = stats.sumOf { it.rbi }
+                        val totalG = stats.sumOf { it.games }
+                        val totalR = stats.sumOf { it.r }
+                        val totalSB = stats.sumOf { it.sb }
+                        val totalBB = stats.sumOf { it.bb }
+                        val totalPA = stats.sumOf { it.pa }.takeIf { it > 0 } ?: (totalAB + totalBB)
+                        
+                        val careerAvg = if (totalAB > 0) String.format(Locale.US, ".%03d", (totalH.toDouble() / totalAB * 1000).toInt()) else ".000"
+                        
+                        // Approximate OPS calculation
+                        val obpNumerator = (totalH + totalBB).toDouble()
+                        val obpDenominator = totalPA.toDouble()
+                        val obp = if (obpDenominator > 0) obpNumerator / obpDenominator else 0.0
+                        
+                        val slgNumerator = (totalH + totalHR * 3).toDouble() // Very rough estimate: (1B + 2*2B + 3*3B + 4*HR)
+                        val slg = if (totalAB > 0) slgNumerator / totalAB else 0.0
+                        val careerOps = String.format(Locale.US, "%.3f", obp + slg)
+
+                        StatCell(totalG.toString())
+                        StatCell(totalHR.toString())
+                        StatCell(totalRBI.toString())
+                        StatCell(careerAvg)
+                        StatCell(careerOps)
+                        StatCell(totalH.toString())
+                        StatCell(totalR.toString())
+                        StatCell(totalSB.toString())
+                    } else {
+                        val totalW = stats.sumOf { it.w }
+                        val totalL = stats.sumOf { it.l }
+                        val totalK = stats.sumOf { it.k }
+                        val totalER = stats.sumOf { it.earnedRuns ?: 0 }
+                        val totalBB = stats.sumOf { it.p_bb }
+                        val totalH = stats.sumOf { it.h } // For pitchers this is Hits Allowed
+                        
+                        val totalOuts = stats.sumOf { 
+                            val parts = it.ip.split(".")
+                            val innings = parts[0].toIntOrNull() ?: 0
+                            val partial = if (parts.size > 1) parts[1].toIntOrNull() ?: 0 else 0
+                            innings * 3 + partial
+                        }
+                        
+                        val totalInnings = totalOuts.toDouble() / 3.0
+                        val careerEra = if (totalInnings > 0) String.format(Locale.US, "%.2f", (totalER * 9.0) / totalInnings) else "-.--"
+                        val careerWhip = if (totalInnings > 0) String.format(Locale.US, "%.2f", (totalBB + totalH).toDouble() / totalInnings) else "-.--"
+                        
+                        val totalIP = "${totalOuts / 3}.${totalOuts % 3}"
+                        
+                        StatCell("$totalW-$totalL")
+                        StatCell(careerEra)
+                        StatCell(totalIP)
+                        StatCell(totalK.toString())
+                        StatCell(careerWhip)
+                        StatCell(stats.sumOf { it.gs }.toString())
+                        StatCell(stats.sumOf { it.sv }.toString())
+                        StatCell(totalBB.toString())
+                    }
+                }
+            }
         }
     }
 }

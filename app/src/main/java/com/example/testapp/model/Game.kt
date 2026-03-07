@@ -22,8 +22,18 @@ data class BoxScore(
     val gameId: Int,
     val awayTeamName: String = "",
     val homeTeamName: String = "",
+    val status: String = "",
     val awayPlayers: List<BoxScorePlayer>,
-    val homePlayers: List<BoxScorePlayer>
+    val homePlayers: List<BoxScorePlayer>,
+    val awayLineScore: LineScore = LineScore(),
+    val homeLineScore: LineScore = LineScore()
+)
+
+@Serializable
+data class LineScore(
+    val runs: Int = 0,
+    val hits: Int = 0,
+    val errors: Int = 0
 )
 
 @Serializable
@@ -32,7 +42,9 @@ data class BoxScorePlayer(
     val name: String,
     val position: String,
     val battingStats: BattingStats? = null,
-    val pitchingStats: PitchingStats? = null
+    val pitchingStats: PitchingStats? = null,
+    val isCurrentBatter: Boolean = false,
+    val isCurrentPitcher: Boolean = false
 )
 
 @Serializable

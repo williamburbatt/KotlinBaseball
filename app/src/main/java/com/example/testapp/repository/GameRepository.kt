@@ -5,7 +5,9 @@ import com.example.testapp.model.Game
 import com.example.testapp.model.BoxScore
 import com.example.testapp.model.BoxScorePlayer
 import com.example.testapp.model.BattingStats
+import com.example.testapp.model.LineScore
 import com.example.testapp.model.PitchingStats
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import java.time.ZoneId
@@ -51,20 +53,39 @@ class GameRepository @Inject constructor(
         }
     }
 
-    fun getBoxScore(gameId: Int): Flow<BoxScore?> = flow {
-        try {
-            val response = api.getBoxscore(gameId)
-            val boxScore = BoxScore(
-                gameId = gameId,
-                awayTeamName = response.teams.away.team.name ?: "",
-                homeTeamName = response.teams.home.team.name ?: "",
-                awayPlayers = response.teams.away.players.values.map { it.toModel() },
-                homePlayers = response.teams.home.players.values.map { it.toModel() }
-            )
-            emit(boxScore)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            emit(null)
+    /**
+     * Step 1: Create a Flow that updates the box score every 5 seconds.
+     * The 'flow' builder allows us to emit multiple values over time.
+     */
+    fun getLiveBoxScore(gameId: Int): Flow<BoxScore?> = flow {
+        while(true) {
+            try {
+                val response = api.getBoxscore(gameId)
+                val boxScore = BoxScore(
+                    gameId = gameId,
+                    awayTeamName = response.teams.away.team.name ?: "",
+                    homeTeamName = response.teams.home.team.name ?: "",
+                    status = "Live", 
+                    awayPlayers = response.teams.away.players.values.map { it.toModel() },
+                    homePlayers = response.teams.home.players.values.map { it.toModel() },
+                    awayLineScore = LineScore(
+                        runs = response.teams.away.teamStats.batting.runs ?: 0,
+                        hits = response.teams.away.teamStats.batting.hits ?: 0,
+                        errors = response.teams.away.teamStats.fielding.errors ?: 0
+                    ),
+                    homeLineScore = LineScore(
+                        runs = response.teams.home.teamStats.batting.runs ?: 0,
+                        hits = response.teams.home.teamStats.batting.hits ?: 0,
+                        errors = response.teams.home.teamStats.fielding.errors ?: 0
+                    )
+                )
+                emit(boxScore)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                // On error, we don't necessarily want to kill the flow, 
+                // just wait and try again.
+            }
+            delay(5000) // Wait 30 seconds before next update
         }
     }
 
@@ -72,7 +93,9 @@ class GameRepository @Inject constructor(
         return BoxScorePlayer(
             id = person.id,
             name = person.fullName,
-            position = position.abbreviation,
+            position = position.abbreviation?: "",
+            isCurrentBatter = gameStatus.isCurrentBatter ?: false,
+            isCurrentPitcher = gameStatus.isCurrentPitcher ?: false,
             battingStats = stats.batting?.let {
                 BattingStats(
                     ab = it.atBats ?: 0,

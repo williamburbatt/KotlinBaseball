@@ -21,7 +21,7 @@ class MlbStatsApi @Inject constructor(
 
     suspend fun getPlayerDetails(
         playerId: Int,
-        hydrate: String = "currentTeam,stats(group=[hitting,pitching,batting],type=[yearByYear,season])"
+        hydrate: String = "currentTeam,stats(group=[hitting,pitching],type=[yearByYear,season])"
     ): PeopleResponse {
         return client.get("$baseUrl/v1/people/$playerId") {
             parameter("hydrate", hydrate)
@@ -94,6 +94,7 @@ data class PersonDetails(
     val id: Int,
     val fullName: String,
     val primaryNumber: String? = null,
+    val primaryPosition: Position? = null,
     val birthDate: String? = null,
     val currentAge: Int? = null,
     val height: String? = null,
@@ -109,7 +110,7 @@ data class PersonDetails(
 )
 
 @Serializable
-data class Side(val code: String, val description: String)
+data class Side(val code: String? = null, val description: String? = null)
 
 @Serializable
 data class RosterResponse(val roster: List<RosterPlayer>)
@@ -118,7 +119,12 @@ data class RosterPlayer(val person: Person, val position: Position)
 @Serializable
 data class Person(val id: Int, val fullName: String)
 @Serializable
-data class Position(val abbreviation: String, val name: String? = null)
+data class Position(
+    val abbreviation: String? = null, 
+    val name: String? = null,
+    val type: String? = null,
+    val code: String? = null
+)
 
 @Serializable
 data class PlayerStatsResponse(val stats: List<StatContainer>)
@@ -166,6 +172,7 @@ data class PlayerStats(
     val era: String? = null,
     val wins: Int? = null,
     val losses: Int? = null,
+    val earnedRuns: Int? = null,
     val inningsPitched: String? = null,
     val whip: String? = null,
     val gamesStarted: Int? = null,
@@ -202,9 +209,19 @@ data class BoxscoreResponse(val teams: BoxscoreTeams)
 @Serializable
 data class BoxscoreTeams(val away: BoxscoreTeam, val home: BoxscoreTeam)
 @Serializable
-data class BoxscoreTeam(val team: Team, val players: Map<String, BoxscorePlayer>)
+data class BoxscoreTeam(val team: Team, val teamStats: BoxscoreTeamStats, val players: Map<String, BoxscorePlayer>)
 @Serializable
-data class BoxscorePlayer(val person: Person, val stats: BoxscorePlayerStats, val position: Position)
+data class BoxscoreTeamStats(val batting: BoxscoreBattingStats, val pitching: BoxscorePitchingStats, val fielding: BoxscoreFieldingStats)
+@Serializable
+data class BoxscoreBattingStats(val runs: Int? = null, val hits: Int? = null)
+@Serializable
+data class BoxscorePitchingStats(val runs: Int? = null, val hits: Int? = null)
+@Serializable
+data class BoxscoreFieldingStats(val errors: Int? = null)
+@Serializable
+data class BoxscorePlayer(val person: Person, val stats: BoxscorePlayerStats, val position: Position, val gameStatus: BoxscoreGameStatus)
+@Serializable
+data class BoxscoreGameStatus(val isCurrentBatter: Boolean? = false, val isCurrentPitcher: Boolean? = false)
 @Serializable
 data class BoxscorePlayerStats(val batting: BattingStats? = null, val pitching: PitchingStats? = null)
 @Serializable

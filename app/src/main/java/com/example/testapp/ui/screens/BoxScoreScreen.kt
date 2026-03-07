@@ -7,10 +7,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -45,6 +48,7 @@ fun BoxScoreScreen(
 ) {
     val boxScore by viewModel.boxScore.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val lastUpdated by viewModel.lastUpdated.collectAsState()
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Scaffold(
@@ -64,13 +68,30 @@ fun BoxScoreScreen(
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
+                },
+                actions = {
+                    if (lastUpdated != null) {
+                        Text(
+                            text = "Updated: $lastUpdated",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.outline,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                    }
+                    IconButton(onClick = { viewModel.refresh() }, enabled = !isLoading) {
+                        if (isLoading) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                        } else {
+                            Icon(Icons.Default.Refresh, contentDescription = "Refresh")
+                        }
+                    }
                 }
             )
         }
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
-            if (isLoading) {
-                androidx.compose.material3.CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            if (boxScore == null && isLoading) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else if (boxScore != null) {
                 Column {
                     TabRow(selectedTabIndex = selectedTab) {
@@ -130,6 +151,12 @@ fun BoxScoreScreen(
                         }
                     }
                 }
+            } else if (!isLoading) {
+                Text(
+                    "Failed to load box score",
+                    modifier = Modifier.align(Alignment.Center),
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
         }
     }

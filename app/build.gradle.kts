@@ -20,16 +20,23 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        // Faster build by only targeting current device architecture during development
+        resConfigs("en", "xxhdpi")
     }
 
     buildTypes {
+        debug {
+            // Disable PNG crunching in debug for faster builds
+            isCrunchPngs = false
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("debug") // For local profile testing
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
@@ -40,7 +47,9 @@ android {
         jvmTarget = "11"
         freeCompilerArgs += listOf(
             "-P",
-            "plugin:androidx.compose.compiler.plugins.kotlin:featureFlag=StrongSkipping"
+            "plugin:androidx.compose.compiler.plugins.kotlin:featureFlag=StrongSkipping",
+            // Enable incremental compilation
+            "-Xbackend-threads=4"
         )
     }
     buildFeatures {
@@ -49,7 +58,6 @@ android {
 }
 
 baselineProfile {
-    // This connects the app to the benchmark module we'll create next
     filter {
         include("com.example.testapp.**")
     }
