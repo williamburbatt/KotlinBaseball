@@ -6,12 +6,15 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.example.testapp.api.BoxscoreResponse
 import com.example.testapp.api.LinescoreResponse
+import com.example.testapp.api.PlayByPlayResponse
 import com.example.testapp.repository.GameRepository
 import com.example.testapp.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -20,6 +23,7 @@ import javax.inject.Inject
 data class BoxScoreUiState(
     val boxscore: BoxscoreResponse? = null,
     val linescore: LinescoreResponse? = null,
+    val playByPlay: PlayByPlayResponse? = null,
     val isLoading: Boolean = true,
     val error: String? = null,
     val lastUpdated: String? = null
@@ -38,17 +42,22 @@ class BoxScoreViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(BoxScoreUiState())
     val uiState: StateFlow<BoxScoreUiState> = _uiState.asStateFlow()
+    private var refreshJob: Job? = null
 
     init {
         observeGameData()
     }
 
     private fun observeGameData() {
-        viewModelScope.launch {
-            repository.getLiveGameData(gameId).collect { data ->
-                _uiState.value = _uiState.value.copy(
-                    boxscore = data.boxscore,
-                    linescore = data.linescore,
+        refreshJob?.cancel()
+        refreshJob = viewModelScope.launch {
+            repository.getLiveGameData(gameId)
+                .combine(repository.getPlaybyPlayData(gameId)){gameData, plays -> Pair(gameData,plays)}
+                    .collect { (gameData, plays) ->
+                        _uiState.value = _uiState.value.copy(
+                    boxscore = gameData.boxscore,
+                    linescore = gameData.linescore,
+                    playByPlay = plays,
                     isLoading = false,
                     lastUpdated = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
                 )

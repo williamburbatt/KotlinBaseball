@@ -3,6 +3,7 @@ package com.example.testapp.repository
 import com.example.testapp.api.BoxscoreResponse
 import com.example.testapp.api.LinescoreResponse
 import com.example.testapp.api.MlbStatsApi
+import com.example.testapp.api.PlayByPlayResponse
 import com.example.testapp.model.Game
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -73,6 +74,17 @@ class GameRepository @Inject constructor(
                 val boxscore = api.getBoxscore(gamePk)
                 val linescore = api.getLinescore(gamePk)
                 emit(GameData(boxscore, linescore))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            delay(5000) // Update every 5 seconds as requested
+        }
+    }
+    fun getPlaybyPlayData(gamePk: Int): Flow<PlayByPlayResponse> = flow {
+        while (true) {
+            try {
+                val playbyplay = api.getPlayByPlay(gamePk)
+                emit(playbyplay)
             } catch (e: Exception) {
                 e.printStackTrace()
             }

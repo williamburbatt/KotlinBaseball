@@ -249,6 +249,35 @@ data class PitchingStats(
     val era: String? = null,
     val whip: String? = null
 )
+@Serializable
+data class PlayResult(
+    val description: String? = null,
+    val event: String? = null
+)
+
+@Serializable
+data class PlayAbout(
+    val inning: Int? = null,
+    val halfInning: String? = null
+)
+
+@Serializable
+data class PlayCount(
+    val balls: Int? = null,
+    val strikes: Int? = null,
+    val outs: Int? = null
+)
+@Serializable
+data class Play(
+    val result: PlayResult,
+    val about: PlayAbout,
+    val count: PlayCount
+)
+
+@Serializable
+data class PlayByPlayResponse(
+    val allPlays: List<Play>? = null,
+)
 
 @Singleton
 class MlbStatsApi @Inject constructor(
@@ -322,5 +351,9 @@ class MlbStatsApi @Inject constructor(
             parameter("activeStatus", "BOTH")
             parameter("hydrate", "currentTeam")
         }.body()
+    }
+
+    suspend fun getPlayByPlay(gamePk: Int): PlayByPlayResponse {
+        return client.get("$baseUrl/v1/game/$gamePk/playByPlay").body()
     }
 }

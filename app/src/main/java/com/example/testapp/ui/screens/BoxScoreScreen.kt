@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -14,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -21,6 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.testapp.R
 import com.example.testapp.api.BoxscorePlayer
 import com.example.testapp.api.BoxscorePlayerStats
 import com.example.testapp.api.BoxscoreResponse
@@ -117,92 +120,117 @@ fun BoxScoreContent(
                         )
                     }
 
-                    val team = if (selectedTab == 0) boxscore.teams.away else boxscore.teams.home
-                    
-                    item {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                "BATTING",
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Black,
-                                color = MaterialTheme.colorScheme.outline
-                            )
-                            Row(modifier = Modifier.width(260.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                                StatHeaderCol("AB")
-                                StatHeaderCol("R")
-                                StatHeaderCol("H")
-                                StatHeaderCol("RBI")
-                                StatHeaderCol("HR")
-                                StatHeaderCol("SB")
-                            }
-                        }
-                    }
-
-                    val batters = team.players.values
-                        .filter { it.stats.batting != null && (it.stats.batting?.atBats ?: 0) > 0 }
-                        .sortedByDescending { it.stats.batting?.atBats }
+                    if (selectedTab < 2) {
+                        val team = if (selectedTab == 0) boxscore.teams.away else boxscore.teams.home
                         
-                    items(batters) { player ->
-                        BoxscorePlayerRow(
-                            name = player.person.fullName,
-                            pos = player.position.abbreviation ?: "",
-                            ab = player.stats.batting?.atBats ?: 0,
-                            r = player.stats.batting?.runs ?: 0,
-                            h = player.stats.batting?.hits ?: 0,
-                            rbi = player.stats.batting?.rbi ?: 0,
-                            hr = player.stats.batting?.homeRuns ?: 0,
-                            sb = player.stats.batting?.stolenBases ?: 0,
-                            playerId = player.person.id,
-                            onClick = { onPlayerClick(player.person.id) }
-                        )
-                    }
-
-                    item {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                "PITCHING",
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Black,
-                                color = MaterialTheme.colorScheme.outline
-                            )
-                            Row(modifier = Modifier.width(260.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                                StatHeaderCol("IP")
-                                StatHeaderCol("H")
-                                StatHeaderCol("ER")
-                                StatHeaderCol("K")
-                                StatHeaderCol("ERA")
-                                StatHeaderCol("WHIP")
+                        item {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    "BATTING",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.Black,
+                                    color = MaterialTheme.colorScheme.outline
+                                )
+                                Row(modifier = Modifier.width(260.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    StatHeaderCol("AB")
+                                    StatHeaderCol("R")
+                                    StatHeaderCol("H")
+                                    StatHeaderCol("RBI")
+                                    StatHeaderCol("HR")
+                                    StatHeaderCol("SB")
+                                }
                             }
                         }
-                    }
 
-                    val pitchers = team.players.values
-                        .filter { it.stats.pitching != null && it.stats.pitching?.inningsPitched != null && it.stats.pitching?.inningsPitched != "0.0" && it.stats.pitching?.inningsPitched != "0" }
+                        val batters = team.players.values
+                            .filter { it.stats.batting != null && (it.stats.batting?.atBats ?: 0) > 0 }
+                            .sortedByDescending { it.stats.batting?.atBats }
+                            
+                        items(batters) { player ->
+                            BoxscorePlayerRow(
+                                name = player.person.fullName,
+                                pos = player.position.abbreviation ?: "",
+                                ab = player.stats.batting?.atBats ?: 0,
+                                r = player.stats.batting?.runs ?: 0,
+                                h = player.stats.batting?.hits ?: 0,
+                                rbi = player.stats.batting?.rbi ?: 0,
+                                hr = player.stats.batting?.homeRuns ?: 0,
+                                sb = player.stats.batting?.stolenBases ?: 0,
+                                playerId = player.person.id,
+                                onClick = { onPlayerClick(player.person.id) }
+                            )
+                        }
 
-                    items(pitchers) { player ->
-                        BoxscorePitcherRow(
-                            name = player.person.fullName,
-                            ip = player.stats.pitching?.inningsPitched ?: "0.0",
-                            h = player.stats.pitching?.hits ?: 0,
-                            er = player.stats.pitching?.earnedRuns ?: 0,
-                            k = player.stats.pitching?.strikeOuts ?: 0,
-                            era = player.stats.pitching?.era ?: "-.--",
-                            whip = player.stats.pitching?.whip ?: "-.--",
-                            playerId = player.person.id,
-                            onClick = { onPlayerClick(player.person.id) }
-                        )
+                        item {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    "PITCHING",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.Black,
+                                    color = MaterialTheme.colorScheme.outline
+                                )
+                                Row(modifier = Modifier.width(260.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    StatHeaderCol("IP")
+                                    StatHeaderCol("H")
+                                    StatHeaderCol("ER")
+                                    StatHeaderCol("K")
+                                    StatHeaderCol("ERA")
+                                    StatHeaderCol("WHIP")
+                                }
+                            }
+                        }
+
+                        val pitchers = team.players.values
+                            .filter { it.stats.pitching != null && it.stats.pitching?.inningsPitched != null && it.stats.pitching?.inningsPitched != "0.0" && it.stats.pitching?.inningsPitched != "0" }
+
+                        items(pitchers) { player ->
+                            BoxscorePitcherRow(
+                                name = player.person.fullName,
+                                ip = player.stats.pitching?.inningsPitched ?: "0.0",
+                                h = player.stats.pitching?.hits ?: 0,
+                                er = player.stats.pitching?.earnedRuns ?: 0,
+                                k = player.stats.pitching?.strikeOuts ?: 0,
+                                era = player.stats.pitching?.era ?: "-.--",
+                                whip = player.stats.pitching?.whip ?: "-.--",
+                                playerId = player.person.id,
+                                onClick = { onPlayerClick(player.person.id) }
+                            )
+                        }
+                    } else {
+                        val plays = uiState.playByPlay?.allPlays ?: emptyList()
+                        if (plays.isEmpty()) {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(32.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        "No play-by-play data available for this game.",
+                                        color = MaterialTheme.colorScheme.outline,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            }
+                        } else {
+                            items(plays.reversed()) { play ->
+                                PlayRow(play)
+                            }
+                        }
                     }
                 }
             }
@@ -418,6 +446,25 @@ fun TeamStatsTabs(selectedTab: Int, onTabSelected: (Int) -> Unit, awayName: Stri
                 Text(homeName, color = if (selectedTab == 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline)
             }
         }
+        Tab(selected = selectedTab == 2, onClick = { onTabSelected(2) }) {
+            Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Surface(
+                    modifier = Modifier.size(24.dp),
+                    shape = CircleShape,
+                    color = Color.White,
+                    shadowElevation = 2.dp
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_logo_classic_ball),
+                        contentDescription = "Plays",
+                        modifier = Modifier.padding(4.dp),
+                        tint = Color.Unspecified
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Plays", color = if (selectedTab == 2) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline)
+            }
+        }
     }
 }
 
@@ -512,6 +559,65 @@ fun BoxscorePitcherRow(
 }
 
 @Composable
+fun PlayRow(play: com.example.testapp.api.Play) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.primary,
+                        shape = CircleShape,
+                        modifier = Modifier.size(8.dp)
+                    ) {}
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "${play.about.halfInning} ${play.about.inning}",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                
+                Text(
+                    text = "${play.count.outs} Outs",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.outline,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = play.result.description ?: "",
+                style = MaterialTheme.typography.bodyMedium,
+                lineHeight = 20.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            
+            if (play.result.event != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                SuggestionChip(
+                    onClick = { },
+                    label = { Text(play.result.event ?: "", fontSize = 10.sp) },
+                    modifier = Modifier.height(24.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
 fun StatHeaderCol(label: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(35.dp)) {
         Text(label, color = MaterialTheme.colorScheme.outline, fontWeight = FontWeight.Bold, fontSize = 12.sp)
@@ -601,11 +707,25 @@ fun BoxScorePreview() {
         )
     )
 
+    val mockPlays = listOf(
+        com.example.testapp.api.Play(
+            result = com.example.testapp.api.PlayResult("Luis Arraez flies out to right fielder Kyle Tucker.", "Flyout"),
+            about = com.example.testapp.api.PlayAbout(8, "Top"),
+            count = com.example.testapp.api.PlayCount(0, 0, 1)
+        ),
+        com.example.testapp.api.Play(
+            result = com.example.testapp.api.PlayResult("Josh Bell doubles (20) on a line drive to center fielder Chas McCormick. Luis Arraez scores.", "Double"),
+            about = com.example.testapp.api.PlayAbout(8, "Top"),
+            count = com.example.testapp.api.PlayCount(1, 1, 2)
+        )
+    )
+
     TestAppTheme {
         BoxScoreContent(
             uiState = com.example.testapp.ui.viewmodels.BoxScoreUiState(
                 boxscore = mockBoxscore,
                 linescore = mockLinescore,
+                playByPlay = com.example.testapp.api.PlayByPlayResponse(mockPlays),
                 isLoading = false
             ),
             onBack = {}
