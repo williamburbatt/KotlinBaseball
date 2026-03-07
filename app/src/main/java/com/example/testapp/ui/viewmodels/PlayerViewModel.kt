@@ -34,16 +34,31 @@ class PlayerViewModel @Inject constructor(
     private val route = savedStateHandle.toRoute<Screen.PlayerList>()
     val teamId = route.teamId
     
-    private val _selectedYear = MutableStateFlow(2026)
+    private val _selectedYear = MutableStateFlow(2024)
     val selectedYear: StateFlow<Int> = _selectedYear
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
+    private val _selectedPlayer = MutableStateFlow<Player?>(null)
+    val selectedPlayer: StateFlow<Player?> = _selectedPlayer
+
     private val positionOrder = listOf("C", "1B", "2B", "SS", "3B", "LF", "CF", "RF", "DH")
 
     fun updateYear(year: Int) {
         _selectedYear.value = year
+    }
+
+    fun selectPlayer(playerId: Int) {
+        _isLoading.value = true
+        repository.getPlayerDetail(playerId).onEach {
+            _selectedPlayer.value = it
+            _isLoading.value = false
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    }
+
+    fun clearSelectedPlayer() {
+        _selectedPlayer.value = null
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)

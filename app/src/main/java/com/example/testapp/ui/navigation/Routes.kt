@@ -25,7 +25,4 @@ sealed interface Screen {
         val awayTeam: String,
         val homeTeam: String
     ) : Screen
-
-    @Serializable
-    data object LogoGallery : Screen
 }

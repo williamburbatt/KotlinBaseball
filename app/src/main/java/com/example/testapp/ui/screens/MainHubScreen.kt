@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -35,8 +34,7 @@ import com.example.testapp.R
 @Composable
 fun MainHubScreen(
     onTeamsClick: () -> Unit,
-    onGamesClick: () -> Unit,
-    onLogosClick: () -> Unit
+    onGamesClick: () -> Unit
 ) {
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
         Column(
@@ -76,15 +74,6 @@ fun MainHubScreen(
                 description = "Browse teams and player stats",
                 icon = Icons.Default.List,
                 onClick = onTeamsClick
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            HubCard(
-                title = "Logo Gallery",
-                description = "View custom baseball branding",
-                icon = Icons.Default.Face,
-                onClick = onLogosClick
             )
         }
     }

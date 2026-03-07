@@ -141,7 +141,10 @@ fun BoxScorePlayerRow(player: BoxScorePlayer) {
     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(text = "${player.name} (${player.position})", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-            Text(text = "AB: ${stats.ab} R: ${stats.r} H: ${stats.h} RBI: ${stats.rbi} HR: ${stats.hr}", style = MaterialTheme.typography.bodySmall)
+            Text(
+                text = "AB: ${stats.ab} R: ${stats.r} H: ${stats.h} RBI: ${stats.rbi} HR: ${stats.hr}",
+                style = MaterialTheme.typography.bodySmall
+            )
         }
         HorizontalDivider(modifier = Modifier.padding(top = 4.dp), thickness = 0.5.dp, color = Color.LightGray)
     }
@@ -153,7 +156,10 @@ fun BoxScorePitcherRow(player: BoxScorePlayer) {
     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(text = player.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-            Text(text = "IP: ${stats.ip} H: ${stats.h} ER: ${stats.er} K: ${stats.k} BB: ${stats.bb}", style = MaterialTheme.typography.bodySmall)
+            Text(
+                text = "IP: ${stats.ip} H: ${stats.h} ER: ${stats.er} K: ${stats.k} BB: ${stats.bb}",
+                style = MaterialTheme.typography.bodySmall
+            )
         }
         HorizontalDivider(modifier = Modifier.padding(top = 4.dp), thickness = 0.5.dp, color = Color.LightGray)
     }

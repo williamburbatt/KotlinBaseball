@@ -19,6 +19,15 @@ class MlbStatsApi @Inject constructor(
         }.body()
     }
 
+    suspend fun getPlayerDetails(
+        playerId: Int,
+        hydrate: String = "stats(group=[batting,pitching],type=[yearByYear,season])"
+    ): PeopleResponse {
+        return client.get("$baseUrl/v1/people/$playerId") {
+            parameter("hydrate", hydrate)
+        }.body()
+    }
+
     suspend fun getPlayerStats(
         playerId: Int,
         stats: String = "season",
@@ -65,7 +74,31 @@ class MlbStatsApi @Inject constructor(
 @Serializable
 data class TeamResponse(val teams: List<Team>)
 @Serializable
-data class Team(val id: Int, val name: String, val teamName: String)
+data class Team(val id: Int, val name: String, val teamName: String? = null)
+
+@Serializable
+data class PeopleResponse(val people: List<PersonDetails>)
+
+@Serializable
+data class PersonDetails(
+    val id: Int,
+    val fullName: String,
+    val primaryNumber: String? = null,
+    val birthDate: String? = null,
+    val currentAge: Int? = null,
+    val height: String? = null,
+    val weight: Int? = null,
+    val bats: Side? = null,
+    val throws: Side? = null,
+    val birthCity: String? = null,
+    val birthStateProvince: String? = null,
+    val birthCountry: String? = null,
+    val mlbDebutDate: String? = null,
+    val stats: List<StatContainer>? = null
+)
+
+@Serializable
+data class Side(val code: String, val description: String)
 
 @Serializable
 data class RosterResponse(val roster: List<RosterPlayer>)
@@ -74,24 +107,58 @@ data class RosterPlayer(val person: Person, val position: Position)
 @Serializable
 data class Person(val id: Int, val fullName: String)
 @Serializable
-data class Position(val abbreviation: String)
+data class Position(val abbreviation: String, val name: String? = null)
 
 @Serializable
 data class PlayerStatsResponse(val stats: List<StatContainer>)
 @Serializable
-data class StatContainer(val splits: List<StatSplit>)
+data class StatContainer(
+    val type: StatType? = null,
+    val group: StatGroup? = null,
+    val splits: List<StatSplit>
+)
+
 @Serializable
-data class StatSplit(val stat: PlayerStats)
+data class StatType(val displayName: String)
+@Serializable
+data class StatGroup(val displayName: String)
+
+@Serializable
+data class StatSplit(
+    val season: String? = null,
+    val stat: PlayerStats,
+    val team: Team? = null,
+    val league: League? = null
+)
+
+@Serializable
+data class League(val name: String? = null)
+
 @Serializable
 data class PlayerStats(
     val avg: String? = null,
+    val obp: String? = null,
+    val slg: String? = null,
+    val ops: String? = null,
     val homeRuns: Int? = null,
     val rbi: Int? = null,
+    val runs: Int? = null,
+    val gamesPlayed: Int? = null,
+    val plateAppearances: Int? = null,
+    val atBats: Int? = null,
+    val hits: Int? = null,
+    val stolenBases: Int? = null,
+    val strikeOuts: Int? = null,
+    val baseOnBalls: Int? = null,
+    // Pitching
     val era: String? = null,
     val wins: Int? = null,
     val losses: Int? = null,
-    val strikeOuts: Int? = null,
-    val inningsPitched: String? = null
+    val inningsPitched: String? = null,
+    val whip: String? = null,
+    val gamesStarted: Int? = null,
+    val saves: Int? = null,
+    val strikeouts: Int? = null
 )
 
 @Serializable
@@ -101,7 +168,7 @@ data class ScheduleDate(val date: String, val games: List<Game>)
 @Serializable
 data class Game(
     val gamePk: Int,
-    val gameDate: String, // format: ISO 8601
+    val gameDate: String,
     val teams: GameTeams,
     val status: GameStatus,
     val linescore: Linescore? = null
