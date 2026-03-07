@@ -22,7 +22,8 @@ data class Player(
     // Current Season Stats
     val currentStats: YearlyStats? = null,
     // Historical Stats
-    val careerStats: List<YearlyStats> = emptyList()
+    val careerStats: List<YearlyStats> = emptyList(),
+    val milbStats: List<YearlyStats> = emptyList()
 )
 
 @Serializable

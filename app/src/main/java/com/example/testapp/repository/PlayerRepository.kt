@@ -69,52 +69,70 @@ class PlayerRepository @Inject constructor(
             val currentYearInt = Calendar.getInstance().get(Calendar.YEAR)
             val currentYearStr = currentYearInt.toString()
             
-            // Fetch Person Details with stats to get current team
             val personResponse = api.getPlayerDetails(playerId, hydrate = "currentTeam")
             val person = personResponse.people.firstOrNull()
             
             if (person != null) {
-                // Fetch Career Stats for Hitting and Pitching explicitly
-                val hittingStats = try { api.getPlayerStats(playerId, stats = "yearByYear", group = "hitting") } catch (e: Exception) { null }
-                val pitchingStats = try { api.getPlayerStats(playerId, stats = "yearByYear", group = "pitching") } catch (e: Exception) { null }
-
                 val historyMap = mutableMapOf<String, YearlyStats>()
+                val milbHistoryMap = mutableMapOf<String, YearlyStats>()
 
-                hittingStats?.stats?.forEach { container ->
+                // Fetch MLB Stats
+                val mlbHitting = try { api.getPlayerStats(playerId, stats = "yearByYear", group = "hitting", sportId = 1) } catch (e: Exception) { null }
+                val mlbPitching = try { api.getPlayerStats(playerId, stats = "yearByYear", group = "pitching", sportId = 1) } catch (e: Exception) { null }
+
+                // Fetch MiLB Stats
+                val milbHitting = try { api.getPlayerStats(playerId, stats = "yearByYear", group = "hitting", sportId = 11) } catch (e: Exception) { null }
+                val milbPitching = try { api.getPlayerStats(playerId, stats = "yearByYear", group = "pitching", sportId = 11) } catch (e: Exception) { null }
+
+                // Process MLB
+                mlbHitting?.stats?.forEach { container ->
                     container.splits.forEach { split ->
                         val year = split.season ?: return@forEach
-                        if (year.toIntOrNull() ?: 0 > currentYearInt) return@forEach
-                        historyMap[year] = mapApiStatsToYearly(split.stat, year, split.team?.name ?: "MLB", false)
+                        historyMap[year] = mapApiStatsToYearly(split.stat, year, split.team?.abbreviation ?: split.team?.name ?: "MLB", false)
                     }
                 }
-
-                pitchingStats?.stats?.forEach { container ->
+                mlbPitching?.stats?.forEach { container ->
                     container.splits.forEach { split ->
                         val year = split.season ?: return@forEach
-                        if (year.toIntOrNull() ?: 0 > currentYearInt) return@forEach
                         val existing = historyMap[year]
-                        val pitching = mapApiStatsToYearly(split.stat, year, split.team?.name ?: "MLB", true)
+                        val pitching = mapApiStatsToYearly(split.stat, year, split.team?.abbreviation ?: split.team?.name ?: "MLB", true)
                         historyMap[year] = if (existing != null) mergeStats(existing, pitching) else pitching
                     }
                 }
 
+                // Process MiLB
+                milbHitting?.stats?.forEach { container ->
+                    container.splits.forEach { split ->
+                        val year = split.season ?: return@forEach
+                        milbHistoryMap[year] = mapApiStatsToYearly(split.stat, year, split.team?.abbreviation ?: split.team?.name ?: "MiLB", false)
+                    }
+                }
+                milbPitching?.stats?.forEach { container ->
+                    container.splits.forEach { split ->
+                        val year = split.season ?: return@forEach
+                        val existing = milbHistoryMap[year]
+                        val pitching = mapApiStatsToYearly(split.stat, year, split.team?.abbreviation ?: split.team?.name ?: "MiLB", true)
+                        milbHistoryMap[year] = if (existing != null) mergeStats(existing, pitching) else pitching
+                    }
+                }
+
                 val history = historyMap.values.sortedByDescending { it.year }
-                val currentStats = history.find { it.year == currentYearStr } ?: history.firstOrNull()
+                val milbHistory = milbHistoryMap.values.sortedByDescending { it.year }
+                val currentStats = history.find { it.year == currentYearStr } ?: milbHistory.find { it.year == currentYearStr } ?: history.firstOrNull() ?: milbHistory.firstOrNull()
 
                 val birthPlace = listOfNotNull(person.birthCity, person.birthStateProvince, person.birthCountry).joinToString(", ")
 
-                // Extract current team ID - check currentTeam hydration first
                 val currentTeamId = person.currentTeam?.id
-                    ?: hittingStats?.stats?.flatMap { it.splits }?.find { it.season == currentYearStr }?.team?.id
-                    ?: pitchingStats?.stats?.flatMap { it.splits }?.find { it.season == currentYearStr }?.team?.id
-                    ?: hittingStats?.stats?.flatMap { it.splits }?.maxByOrNull { it.season ?: "" }?.team?.id
-                    ?: pitchingStats?.stats?.flatMap { it.splits }?.maxByOrNull { it.season ?: "" }?.team?.id
+                    ?: mlbHitting?.stats?.flatMap { it.splits }?.find { it.season == currentYearStr }?.team?.id
+                    ?: mlbPitching?.stats?.flatMap { it.splits }?.find { it.season == currentYearStr }?.team?.id
+                    ?: milbHitting?.stats?.flatMap { it.splits }?.find { it.season == currentYearStr }?.team?.id
+                    ?: milbPitching?.stats?.flatMap { it.splits }?.find { it.season == currentYearStr }?.team?.id
 
                 emit(Player(
                     id = person.id.toString(),
                     name = person.fullName,
                     teamId = currentTeamId,
-                    team = person.currentTeam?.name ?: person.stats?.firstOrNull()?.splits?.firstOrNull()?.team?.name ?: "",
+                    team = person.currentTeam?.name ?: "",
                     number = person.primaryNumber ?: "",
                     age = person.currentAge ?: 0,
                     birthDate = person.birthDate ?: "",
@@ -126,7 +144,8 @@ class PlayerRepository @Inject constructor(
                     debutDate = person.mlbDebutDate ?: "",
                     headshotUrl = "https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_426,q_auto:best/v1/people/${person.id}/headshot/67/current",
                     currentStats = currentStats,
-                    careerStats = history
+                    careerStats = history,
+                    milbStats = milbHistory
                 ))
             } else {
                 emit(null)

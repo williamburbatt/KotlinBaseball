@@ -76,7 +76,7 @@ class MlbStatsApi @Inject constructor(
 @Serializable
 data class TeamResponse(val teams: List<Team>)
 @Serializable
-data class Team(val id: Int, val name: String? = null, val teamName: String? = null)
+data class Team(val id: Int, val name: String? = null, val teamName: String? = null, val abbreviation: String? = null)
 
 @Serializable
 data class PeopleResponse(val people: List<PersonDetails>)

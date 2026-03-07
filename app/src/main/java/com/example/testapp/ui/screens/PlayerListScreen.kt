@@ -42,6 +42,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -57,6 +61,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.testapp.model.Player
+import com.example.testapp.model.YearlyStats
 import com.example.testapp.ui.components.PlayerHeadshot
 import com.example.testapp.ui.components.PositionBadge
 import com.example.testapp.ui.components.SectionHeader
@@ -227,6 +232,7 @@ fun PlayerCard(player: Player, onClick: () -> Unit) {
 fun DetailedPlayerCard(player: Player, onClose: () -> Unit) {
     val currentYear = Calendar.getInstance().get(Calendar.YEAR).toString()
     val teamColor = TeamColors.getTeamColor(player.teamId)
+    var selectedTabIndex by remember { mutableStateOf(if (player.careerStats.isNotEmpty()) 0 else 1) }
     
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -286,40 +292,67 @@ fun DetailedPlayerCard(player: Player, onClose: () -> Unit) {
                 }
             }
 
+            val accentColor = if (teamColor == Color.LightGray) Color(0xFF002D72) else teamColor
+
+            Column(modifier = Modifier.padding(16.dp)) {
+                val displayYear = player.currentStats?.year ?: currentYear
+                Text(
+                    "$displayYear SEASON HIGHLIGHTS",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Black,
+                    color = accentColor
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                CurrentSeasonCard(player, displayYear, accentColor)
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            TabRow(
+                selectedTabIndex = selectedTabIndex,
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = accentColor,
+                indicator = { tabPositions ->
+                    TabRowDefaults.SecondaryIndicator(
+                        Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
+                        color = accentColor
+                    )
+                }
+            ) {
+                Tab(
+                    selected = selectedTabIndex == 0,
+                    onClick = { selectedTabIndex = 0 },
+                    text = { Text("MLB CAREER", fontWeight = FontWeight.Bold) }
+                )
+                Tab(
+                    selected = selectedTabIndex == 1,
+                    onClick = { selectedTabIndex = 1 },
+                    text = { Text("MiLB CAREER", fontWeight = FontWeight.Bold) }
+                )
+            }
+
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
                     .padding(16.dp)
             ) {
-                item {
-                    val displayYear = player.currentStats?.year ?: currentYear
-                    val accentColor = if (teamColor == Color.LightGray) Color(0xFF002D72) else teamColor
-                    
-                    Text(
-                        "$displayYear SEASON HIGHLIGHTS",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Black,
-                        color = accentColor
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    CurrentSeasonCard(player, displayYear, accentColor)
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
-
-                item {
-                    val accentColor = if (teamColor == Color.LightGray) Color(0xFF002D72) else teamColor
-                    Text(
-                        "CAREER HISTORY",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Black,
-                        color = accentColor
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                }
-
-                item {
-                    StatsTable(player)
+                val statsToShow = if (selectedTabIndex == 0) player.careerStats else player.milbStats
+                
+                if (statsToShow.isEmpty()) {
+                    item {
+                        Box(modifier = Modifier.fillMaxWidth().padding(top = 48.dp), contentAlignment = Alignment.Center) {
+                            Text(
+                                "No ${if (selectedTabIndex == 0) "MLB" else "Minor League"} stats available",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.outline
+                            )
+                        }
+                    }
+                } else {
+                    item {
+                        StatsTable(player, statsToShow)
+                    }
                 }
                 
                 item { Spacer(modifier = Modifier.height(32.dp)) }
@@ -382,7 +415,7 @@ fun HighlightStat(label: String, value: String, accentColor: Color) {
 }
 
 @Composable
-fun StatsTable(player: Player) {
+fun StatsTable(player: Player, stats: List<YearlyStats>) {
     val isPitcher = player.position.contains("P")
     val headers = if (!isPitcher) {
         listOf("Year", "Team", "G", "HR", "RBI", "AVG", "OPS")
@@ -406,7 +439,7 @@ fun StatsTable(player: Player) {
             }
         }
 
-        player.careerStats.forEach { stats ->
+        stats.forEach { yearly ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -414,21 +447,21 @@ fun StatsTable(player: Player) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (!isPitcher) {
-                    StatCell(stats.year, 1.2f, isYear = true)
-                    StatCell(stats.team, 1.2f)
-                    StatCell(stats.games.toString())
-                    StatCell(stats.hr.toString())
-                    StatCell(stats.rbi.toString())
-                    StatCell(stats.avg)
-                    StatCell(stats.ops)
+                    StatCell(yearly.year, 1.2f, isYear = true)
+                    StatCell(yearly.team, 1.2f)
+                    StatCell(yearly.games.toString())
+                    StatCell(yearly.hr.toString())
+                    StatCell(yearly.rbi.toString())
+                    StatCell(yearly.avg)
+                    StatCell(yearly.ops)
                 } else {
-                    StatCell(stats.year, 1.2f, isYear = true)
-                    StatCell(stats.team, 1.2f)
-                    StatCell("${stats.w}-${stats.l}")
-                    StatCell(stats.era)
-                    StatCell(stats.ip)
-                    StatCell(stats.k.toString())
-                    StatCell(stats.whip)
+                    StatCell(yearly.year, 1.2f, isYear = true)
+                    StatCell(yearly.team, 1.2f)
+                    StatCell("${yearly.w}-${yearly.l}")
+                    StatCell(yearly.era)
+                    StatCell(yearly.ip)
+                    StatCell(yearly.k.toString())
+                    StatCell(yearly.whip)
                 }
             }
             HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
