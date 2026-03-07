@@ -47,12 +47,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.testapp.model.Game
-import com.example.testapp.ui.GameViewModel
+import com.example.testapp.ui.viewmodels.GameViewModel
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -63,7 +61,7 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GameListScreen(
-    onGameClick: (Int) -> Unit,
+    onGameClick: (Game) -> Unit,
     viewModel: GameViewModel = hiltViewModel()
 ) {
     val selectedDate by viewModel.selectedDate.collectAsState()
@@ -75,7 +73,6 @@ fun GameListScreen(
         topBar = {
             Surface(shadowElevation = 8.dp) {
                 Column(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
-                    // Header with Date Picker Toggle
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -105,7 +102,6 @@ fun GameListScreen(
                         }
                     }
 
-                    // Horizontal Date Scroller
                     DateScroller(
                         selectedDate = selectedDate,
                         onDateSelected = { viewModel.updateDate(it) }
@@ -141,7 +137,7 @@ fun GameListScreen(
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 12.dp)
                 ) {
                     items(games) { game ->
-                        GameScoreCard(game = game, onClick = { onGameClick(game.id) })
+                        GameScoreCard(game = game, onClick = { onGameClick(game) })
                     }
                 }
             }
@@ -166,14 +162,12 @@ fun DateScroller(
     onDateSelected: (LocalDate) -> Unit
 ) {
     val listState = rememberLazyListState()
-    
-    // Generate dates around the selected date
     val dates = remember(selectedDate) {
         (-15..15).map { selectedDate.plusDays(it.toLong()) }
     }
 
     LaunchedEffect(Unit) {
-        listState.scrollToItem(15) // Start centered
+        listState.scrollToItem(15)
     }
 
     LazyRow(
@@ -232,7 +226,7 @@ fun M3DatePickerDialog(
         initialSelectedDateMillis = initialDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
     )
 
-    DatePickerDialog(
+    androidx.compose.material3.DatePickerDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
             TextButton(onClick = {
@@ -278,18 +272,31 @@ fun GameScoreCard(game: Game, onClick: () -> Unit) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Surface(
-                    color = if (game.status == "Final") Color.LightGray.copy(alpha = 0.2f) else MaterialTheme.colorScheme.primaryContainer,
-                    shape = RoundedCornerShape(4.dp)
-                ) {
-                    Text(
-                        text = game.status.uppercase(),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                        color = if (game.status == "Final") Color.DarkGray else MaterialTheme.colorScheme.primary
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Surface(
+                        color = if (game.status == "Final") Color.LightGray.copy(alpha = 0.2f) else MaterialTheme.colorScheme.primaryContainer,
+                        shape = RoundedCornerShape(4.dp)
+                    ) {
+                        Text(
+                            text = game.status.uppercase(),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            color = if (game.status == "Final") Color.DarkGray else MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    
+                    if (game.status != "Final" && game.startTime != null) {
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = game.startTime,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.outline,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
+
                 Text(
                     text = "BOX SCORE >",
                     style = MaterialTheme.typography.labelSmall,

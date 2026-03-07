@@ -10,6 +10,7 @@ data class Game(
     val awayScore: Int?,
     val homeScore: Int?,
     val status: String,
+    val startTime: String? = null,
     val awayHits: Int? = null,
     val homeHits: Int? = null,
     val awayErrors: Int? = null,
@@ -19,6 +20,8 @@ data class Game(
 @Serializable
 data class BoxScore(
     val gameId: Int,
+    val awayTeamName: String = "",
+    val homeTeamName: String = "",
     val awayPlayers: List<BoxScorePlayer>,
     val homePlayers: List<BoxScorePlayer>
 )

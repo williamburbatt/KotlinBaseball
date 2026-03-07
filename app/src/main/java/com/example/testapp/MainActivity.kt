@@ -4,11 +4,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
+import com.example.testapp.ui.navigation.Screen
 import com.example.testapp.ui.screens.BoxScoreScreen
 import com.example.testapp.ui.screens.GameListScreen
 import com.example.testapp.ui.screens.MainHubScreen
@@ -26,44 +25,39 @@ class MainActivity : ComponentActivity() {
         setContent {
             TestAppTheme {
                 val navController = rememberNavController()
-                NavHost(navController = navController, startDestination = "main") {
-                    composable("main") {
+                NavHost(navController = navController, startDestination = Screen.MainHub) {
+                    composable<Screen.MainHub> {
                         MainHubScreen(
-                            onTeamsClick = { navController.navigate("sports") },
-                            onGamesClick = { navController.navigate("games") }
+                            onTeamsClick = { navController.navigate(Screen.SportSelection) },
+                            onGamesClick = { navController.navigate(Screen.GameList) }
                         )
                     }
-                    composable("sports") {
+                    composable<Screen.SportSelection> {
                         SportSelectionScreen(onSportClick = { sportId ->
-                            navController.navigate("teams/$sportId")
+                            navController.navigate(Screen.TeamList(sportId))
                         })
                     }
-                    composable(
-                        "teams/{sportId}",
-                        arguments = listOf(navArgument("sportId") { type = NavType.IntType })
-                    ) { 
+                    composable<Screen.TeamList> { 
                         TeamListScreen(onTeamClick = { teamId ->
-                            navController.navigate("players/$teamId")
+                            navController.navigate(Screen.PlayerList(teamId))
                         })
                     }
-                    composable(
-                        "players/{teamId}",
-                        arguments = listOf(navArgument("teamId") { type = NavType.IntType })
-                    ) { backStackEntry ->
-                        val teamId = backStackEntry.arguments?.getInt("teamId") ?: 0
-                        PlayerListScreen(teamId = teamId)
+                    composable<Screen.PlayerList> { 
+                        PlayerListScreen()
                     }
-                    composable("games") {
-                        GameListScreen(onGameClick = { gameId ->
-                            navController.navigate("boxscore/$gameId")
+                    composable<Screen.GameList> {
+                        GameListScreen(onGameClick = { game ->
+                            navController.navigate(
+                                Screen.BoxScore(
+                                    gameId = game.id,
+                                    awayTeam = game.awayTeam,
+                                    homeTeam = game.homeTeam
+                                )
+                            )
                         })
                     }
-                    composable(
-                        "boxscore/{gameId}",
-                        arguments = listOf(navArgument("gameId") { type = NavType.IntType })
-                    ) { backStackEntry ->
-                        val gameId = backStackEntry.arguments?.getInt("gameId") ?: 0
-                        BoxScoreScreen(gameId = gameId, onBack = { navController.popBackStack() })
+                    composable<Screen.BoxScore> {
+                        BoxScoreScreen(onBack = { navController.popBackStack() })
                     }
                 }
             }

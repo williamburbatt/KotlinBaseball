@@ -26,8 +26,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.testapp.model.Team
-import com.example.testapp.ui.TeamViewModel
 import com.example.testapp.ui.components.TeamLogo
+import com.example.testapp.ui.viewmodels.TeamViewModel
 
 @Composable
 fun TeamListScreen(

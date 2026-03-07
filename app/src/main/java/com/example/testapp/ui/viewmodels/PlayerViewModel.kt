@@ -1,10 +1,12 @@
-package com.example.testapp.ui
+package com.example.testapp.ui.viewmodels
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.example.testapp.model.Player
 import com.example.testapp.repository.PlayerRepository
+import com.example.testapp.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,7 +31,8 @@ class PlayerViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val teamIdFlow = savedStateHandle.getStateFlow("teamId", 117)
+    private val route = savedStateHandle.toRoute<Screen.PlayerList>()
+    val teamId = route.teamId
     
     private val _selectedYear = MutableStateFlow(2026)
     val selectedYear: StateFlow<Int> = _selectedYear
@@ -45,7 +48,7 @@ class PlayerViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val groupedPlayers: StateFlow<List<PlayerGroup>> = combine(
-        teamIdFlow,
+        MutableStateFlow(teamId),
         _selectedYear
     ) { id, year ->
         id to year
@@ -70,7 +73,6 @@ class PlayerViewModel @Inject constructor(
         initialValue = emptyList()
     )
 
-    // Keep the original players flow for compatibility if needed, though we'll use groupedPlayers
     val players: StateFlow<List<Player>> = groupedPlayers.map { groups -> groups.flatMap { it.players } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 }

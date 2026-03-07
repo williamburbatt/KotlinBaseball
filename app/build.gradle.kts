@@ -61,11 +61,16 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     
-    // Retrofit & OkHttp & Serialization
-    implementation(libs.retrofit.core)
-    implementation(libs.retrofit.kotlinx.serialization)
-    implementation(libs.okhttp.logging)
+    // Ktor & Serialization
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.okhttp)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.client.logging)
+    implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.kotlinx.serialization.json)
+    
+    // OkHttp Logging (still useful for the Ktor OkHttp engine)
+    implementation(libs.okhttp.logging)
     
     // Coil (Image Loading)
     implementation(libs.coil.compose)

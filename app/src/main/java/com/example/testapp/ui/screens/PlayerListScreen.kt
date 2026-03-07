@@ -39,17 +39,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.testapp.model.Player
-import com.example.testapp.ui.PlayerViewModel
 import com.example.testapp.ui.components.PositionBadge
 import com.example.testapp.ui.components.SectionHeader
 import com.example.testapp.ui.components.StatItem
 import com.example.testapp.ui.components.TeamLogo
+import com.example.testapp.ui.viewmodels.PlayerViewModel
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlayerListScreen(
-    teamId: Int,
     viewModel: PlayerViewModel = hiltViewModel()
 ) {
     val groupedPlayers by viewModel.groupedPlayers.collectAsState()
@@ -57,6 +56,8 @@ fun PlayerListScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     var showYearDropdown by remember { mutableStateOf(false) }
     
+    val teamId = viewModel.teamId
+
     val years = (2020..2026).reversed().toList()
 
     Scaffold(

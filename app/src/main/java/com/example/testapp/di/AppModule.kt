@@ -10,12 +10,13 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import io.ktor.client.*
+import io.ktor.client.engine.okhttp.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.logging.*
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
-import retrofit2.Retrofit
-import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import javax.inject.Singleton
 
 @Module
@@ -34,24 +35,31 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
-        val logging = HttpLoggingInterceptor()
-        logging.setLevel(HttpLoggingInterceptor.Level.BODY)
-        return OkHttpClient.Builder()
-            .addInterceptor(logging)
-            .build()
+    fun provideHttpClient(json: Json): HttpClient {
+        return HttpClient(OkHttp) {
+            install(ContentNegotiation) {
+                json(json)
+            }
+            install(Logging) {
+                logger = object : Logger {
+                    override fun log(message: String) {
+                        android.util.Log.d("Ktor", message)
+                    }
+                }
+                level = LogLevel.BODY
+            }
+            engine {
+                val logging = HttpLoggingInterceptor()
+                logging.setLevel(HttpLoggingInterceptor.Level.BODY)
+                addInterceptor(logging)
+            }
+        }
     }
 
     @Provides
     @Singleton
-    fun provideMlbStatsApi(okHttpClient: OkHttpClient, json: Json): MlbStatsApi {
-        val contentType = "application/json".toMediaType()
-        return Retrofit.Builder()
-            .baseUrl("https://statsapi.mlb.com/api/")
-            .addConverterFactory(json.asConverterFactory(contentType))
-            .client(okHttpClient)
-            .build()
-            .create(MlbStatsApi::class.java)
+    fun provideMlbStatsApi(httpClient: HttpClient): MlbStatsApi {
+        return MlbStatsApi(httpClient)
     }
 
     @Provides

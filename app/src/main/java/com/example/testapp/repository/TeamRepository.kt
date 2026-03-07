@@ -11,7 +11,7 @@ import javax.inject.Singleton
 class TeamRepository @Inject constructor(
     private val api: MlbStatsApi
 ) {
-    fun getTeams(sportId: Int = 11): Flow<List<Team>> = flow {
+    fun getTeams(sportId: Int = 1): Flow<List<Team>> = flow {
         try {
             val response = api.getTeams(sportId)
             val teams = response.teams.map { 

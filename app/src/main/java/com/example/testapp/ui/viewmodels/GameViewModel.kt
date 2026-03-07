@@ -1,4 +1,4 @@
-package com.example.testapp.ui
+package com.example.testapp.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -25,9 +25,6 @@ class GameViewModel @Inject constructor(
     private val _games = MutableStateFlow<List<Game>>(emptyList())
     val games: StateFlow<List<Game>> = _games.asStateFlow()
 
-    private val _boxScore = MutableStateFlow<BoxScore?>(null)
-    val boxScore: StateFlow<BoxScore?> = _boxScore.asStateFlow()
-
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
@@ -49,19 +46,5 @@ class GameViewModel @Inject constructor(
                 _isLoading.value = false
             }
         }
-    }
-
-    fun loadBoxScore(gameId: Int) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            repository.getBoxScore(gameId).collect {
-                _boxScore.value = it
-                _isLoading.value = false
-            }
-        }
-    }
-    
-    fun clearBoxScore() {
-        _boxScore.value = null
     }
 }

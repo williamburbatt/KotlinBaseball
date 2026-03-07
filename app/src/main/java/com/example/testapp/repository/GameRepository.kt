@@ -8,6 +8,8 @@ import com.example.testapp.model.BattingStats
 import com.example.testapp.model.PitchingStats
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -19,6 +21,13 @@ class GameRepository @Inject constructor(
         try {
             val response = api.getSchedule(date = date)
             val games = response.dates.flatMap { it.games }.map { apiGame ->
+                val localStartTime = try {
+                    val zonedDateTime = ZonedDateTime.parse(apiGame.gameDate)
+                    zonedDateTime.format(DateTimeFormatter.ofPattern("h:mm a"))
+                } catch (e: Exception) {
+                    null
+                }
+
                 Game(
                     id = apiGame.gamePk,
                     awayTeam = apiGame.teams.away.team.name,
@@ -26,6 +35,7 @@ class GameRepository @Inject constructor(
                     awayScore = apiGame.teams.away.score,
                     homeScore = apiGame.teams.home.score,
                     status = apiGame.status.detailedState,
+                    startTime = localStartTime,
                     awayHits = apiGame.linescore?.teams?.away?.hits,
                     homeHits = apiGame.linescore?.teams?.home?.hits,
                     awayErrors = apiGame.linescore?.teams?.away?.errors,
@@ -44,6 +54,8 @@ class GameRepository @Inject constructor(
             val response = api.getBoxscore(gameId)
             val boxScore = BoxScore(
                 gameId = gameId,
+                awayTeamName = response.teams.away.team.name,
+                homeTeamName = response.teams.home.team.name,
                 awayPlayers = response.teams.away.players.values.map { it.toModel() },
                 homePlayers = response.teams.home.players.values.map { it.toModel() }
             )

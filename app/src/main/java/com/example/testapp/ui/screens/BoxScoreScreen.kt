@@ -22,7 +22,6 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -32,30 +31,35 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.testapp.model.BoxScorePlayer
-import com.example.testapp.ui.GameViewModel
+import com.example.testapp.ui.viewmodels.BoxScoreViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BoxScoreScreen(
-    gameId: Int,
     onBack: () -> Unit,
-    viewModel: GameViewModel = hiltViewModel()
+    viewModel: BoxScoreViewModel = hiltViewModel()
 ) {
     val boxScore by viewModel.boxScore.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     var selectedTab by remember { mutableIntStateOf(0) }
 
-    LaunchedEffect(gameId) {
-        viewModel.loadBoxScore(gameId)
-    }
-
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Box Score") },
+                title = { 
+                    Column {
+                        Text("Box Score", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            text = "${viewModel.awayTeamName} @ ${viewModel.homeTeamName}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.outline
+                        )
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -71,10 +75,24 @@ fun BoxScoreScreen(
                 Column {
                     TabRow(selectedTabIndex = selectedTab) {
                         Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }) {
-                            Text("Away", modifier = Modifier.padding(16.dp))
+                            Text(
+                                text = viewModel.awayTeamName,
+                                modifier = Modifier.padding(16.dp),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
                         Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }) {
-                            Text("Home", modifier = Modifier.padding(16.dp))
+                            Text(
+                                text = viewModel.homeTeamName,
+                                modifier = Modifier.padding(16.dp),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
                     }
                     

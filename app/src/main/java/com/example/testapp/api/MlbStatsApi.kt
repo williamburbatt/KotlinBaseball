@@ -1,41 +1,65 @@
 package com.example.testapp.api
 
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.request.*
 import kotlinx.serialization.Serializable
-import retrofit2.http.GET
-import retrofit2.http.Path
-import retrofit2.http.Query
+import javax.inject.Inject
+import javax.inject.Singleton
 
-interface MlbStatsApi {
-    @GET("v1/teams")
-    suspend fun getTeams(@Query("sportId") sportId: Int = 1): TeamResponse
+@Singleton
+class MlbStatsApi @Inject constructor(
+    private val client: HttpClient
+) {
+    private val baseUrl = "https://statsapi.mlb.com/api"
 
-    @GET("v1/people/{playerId}/stats")
+    suspend fun getTeams(sportId: Int = 1): TeamResponse {
+        return client.get("$baseUrl/v1/teams") {
+            parameter("sportId", sportId)
+        }.body()
+    }
+
     suspend fun getPlayerStats(
-        @Path("playerId") playerId: Int,
-        @Query("stats") stats: String = "season",
-        @Query("sportId") sportId: Int = 1,
-        @Query("season") season: Int? = null,
-        @Query("startDate") startDate: String? = null,
-        @Query("endDate") endDate: String? = null
-    ): PlayerStatsResponse
-    
-    @GET("v1/teams/{teamId}/roster")
+        playerId: Int,
+        stats: String = "season",
+        sportId: Int = 1,
+        season: Int? = null,
+        startDate: String? = null,
+        endDate: String? = null
+    ): PlayerStatsResponse {
+        return client.get("$baseUrl/v1/people/$playerId/stats") {
+            parameter("stats", stats)
+            parameter("sportId", sportId)
+            parameter("season", season)
+            parameter("startDate", startDate)
+            parameter("endDate", endDate)
+        }.body()
+    }
+
     suspend fun getTeamRoster(
-        @Path("teamId") teamId: Int,
-        @Query("season") season: Int? = null
-    ): RosterResponse
+        teamId: Int,
+        season: Int? = null
+    ): RosterResponse {
+        return client.get("$baseUrl/v1/teams/$teamId/roster") {
+            parameter("season", season)
+        }.body()
+    }
 
-    @GET("v1/schedule")
     suspend fun getSchedule(
-        @Query("sportId") sportId: Int = 1,
-        @Query("date") date: String, // format: YYYY-MM-DD
-        @Query("hydrate") hydrate: String = "team,linescore"
-    ): ScheduleResponse
+        sportId: Int = 1,
+        date: String,
+        hydrate: String = "team,linescore"
+    ): ScheduleResponse {
+        return client.get("$baseUrl/v1/schedule") {
+            parameter("sportId", sportId)
+            parameter("date", date)
+            parameter("hydrate", hydrate)
+        }.body()
+    }
 
-    @GET("v1/game/{gamePk}/boxscore")
-    suspend fun getBoxscore(
-        @Path("gamePk") gamePk: Int
-    ): BoxscoreResponse
+    suspend fun getBoxscore(gamePk: Int): BoxscoreResponse {
+        return client.get("$baseUrl/v1/game/$gamePk/boxscore").body()
+    }
 }
 
 @Serializable
@@ -60,11 +84,9 @@ data class StatContainer(val splits: List<StatSplit>)
 data class StatSplit(val stat: PlayerStats)
 @Serializable
 data class PlayerStats(
-    // Batting
     val avg: String? = null,
     val homeRuns: Int? = null,
     val rbi: Int? = null,
-    // Pitching
     val era: String? = null,
     val wins: Int? = null,
     val losses: Int? = null,
@@ -79,6 +101,7 @@ data class ScheduleDate(val date: String, val games: List<Game>)
 @Serializable
 data class Game(
     val gamePk: Int,
+    val gameDate: String, // format: ISO 8601
     val teams: GameTeams,
     val status: GameStatus,
     val linescore: Linescore? = null
