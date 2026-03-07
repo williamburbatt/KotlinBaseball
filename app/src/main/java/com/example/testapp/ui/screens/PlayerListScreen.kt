@@ -1,5 +1,6 @@
 package com.example.testapp.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -24,7 +25,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -44,28 +44,27 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
 import com.example.testapp.model.Player
+import com.example.testapp.ui.components.PlayerHeadshot
 import com.example.testapp.ui.components.PositionBadge
 import com.example.testapp.ui.components.SectionHeader
 import com.example.testapp.ui.components.StatItem
 import com.example.testapp.ui.components.TeamLogo
+import com.example.testapp.ui.theme.TeamColors
 import com.example.testapp.ui.viewmodels.PlayerViewModel
+import java.util.Calendar
 
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -81,7 +80,13 @@ fun PlayerListScreen(
     var showYearDropdown by remember { mutableStateOf(false) }
     
     val teamId = viewModel.teamId
-    val years = (2020..2024).reversed().toList()
+    val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+    val years = (2020..currentYear).reversed().toList()
+
+    // Handle back button to close player detail overlay instead of navigating back to team list
+    BackHandler(enabled = selectedPlayer != null) {
+        viewModel.clearSelectedPlayer()
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -163,6 +168,17 @@ fun PlayerListScreen(
                     )
                 }
             }
+            
+            if (isLoading && selectedPlayer != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.3f))
+                        .clickable(enabled = false) {}
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                }
+            }
         }
     }
 }
@@ -182,9 +198,7 @@ fun PlayerCard(player: Player, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             PositionBadge(position = player.position)
-            
             Spacer(modifier = Modifier.width(12.dp))
-            
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = player.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 player.currentStats?.let { stats ->
@@ -210,16 +224,18 @@ fun PlayerCard(player: Player, onClick: () -> Unit) {
 
 @Composable
 fun DetailedPlayerCard(player: Player, onClose: () -> Unit) {
+    val currentYear = Calendar.getInstance().get(Calendar.YEAR).toString()
+    val teamColor = TeamColors.getTeamColor(player.teamId)
+    
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.surface
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // Header
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFFBA0C2F)) // FanGraphs red-ish
+                    .background(teamColor)
                     .padding(top = 48.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
             ) {
                 IconButton(
@@ -230,14 +246,9 @@ fun DetailedPlayerCard(player: Player, onClose: () -> Unit) {
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    AsyncImage(
-                        model = player.headshotUrl,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(100.dp)
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.2f)),
-                        contentScale = ContentScale.Crop
+                    PlayerHeadshot(
+                        playerId = player.id,
+                        modifier = Modifier.size(100.dp)
                     )
                     Spacer(modifier = Modifier.width(16.dp))
                     Column {
@@ -253,7 +264,7 @@ fun DetailedPlayerCard(player: Player, onClose: () -> Unit) {
                             color = Color.White.copy(alpha = 0.8f)
                         )
                         Text(
-                            text = "Age: ${player.age} | Bats/Throws: ${player.bats}/${player.throws} | ${player.height}/${player.weight}",
+                            text = "Age: ${player.age} | B/T: ${player.bats}/${player.throws} | ${player.height}/${player.weight}",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.White.copy(alpha = 0.8f)
                         )
@@ -280,64 +291,71 @@ fun DetailedPlayerCard(player: Player, onClose: () -> Unit) {
                     .weight(1f)
                     .padding(16.dp)
             ) {
-                // Quick Look Section
                 item {
+                    val displayYear = player.currentStats?.year ?: currentYear
+                    val accentColor = if (teamColor == Color.Gray) Color(0xFF002D72) else teamColor
+                    
                     Text(
-                        "QUICK LOOK",
+                        "$displayYear SEASON HIGHLIGHTS",
                         style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF558B2F)
+                        fontWeight = FontWeight.Black,
+                        color = accentColor
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    QuickLookCard(player)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    CurrentSeasonCard(player, displayYear, accentColor)
                     Spacer(modifier = Modifier.height(24.dp))
                 }
 
-                // Stats Table Section
                 item {
+                    val accentColor = if (teamColor == Color.Gray) Color(0xFF002D72) else teamColor
                     Text(
-                        "SEASON STATS",
+                        "CAREER HISTORY",
                         style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF558B2F)
+                        fontWeight = FontWeight.Black,
+                        color = accentColor
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
 
                 item {
                     StatsTable(player)
                 }
+                
+                item { Spacer(modifier = Modifier.height(32.dp)) }
             }
         }
     }
 }
 
 @Composable
-fun QuickLookCard(player: Player) {
+fun CurrentSeasonCard(player: Player, year: String, accentColor: Color) {
+    val stats = player.currentStats
+    val isPitcher = player.position.contains("P")
+    
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
-        shape = RoundedCornerShape(4.dp)
+        colors = CardDefaults.cardColors(containerColor = accentColor.copy(alpha = 0.05f)),
+        shape = RoundedCornerShape(8.dp)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            val stats = player.currentStats ?: return@Column
-            val isPitcher = player.position.contains("P")
-            
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+        if (stats == null) {
+            Box(modifier = Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+                Text("No $year stats available yet", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
+            }
+        } else {
+            Row(
+                modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
                 if (!isPitcher) {
-                    QuickStat("G", stats.games.toString())
-                    QuickStat("PA", stats.pa.toString())
-                    QuickStat("HR", stats.hr.toString())
-                    QuickStat("AVG", stats.avg)
-                    QuickStat("OBP", stats.obp)
-                    QuickStat("OPS", stats.ops)
+                    HighlightStat("AVG", stats.avg, accentColor)
+                    HighlightStat("HR", stats.hr.toString(), accentColor)
+                    HighlightStat("RBI", stats.rbi.toString(), accentColor)
+                    HighlightStat("OPS", stats.ops, accentColor)
                 } else {
-                    QuickStat("W", stats.w.toString())
-                    QuickStat("L", stats.l.toString())
-                    QuickStat("ERA", stats.era)
-                    QuickStat("SO", stats.k.toString())
-                    QuickStat("IP", stats.ip)
-                    QuickStat("WHIP", stats.whip)
+                    HighlightStat("ERA", stats.era, accentColor)
+                    HighlightStat("W-L", "${stats.w}-${stats.l}", accentColor)
+                    HighlightStat("SO", stats.k.toString(), accentColor)
+                    HighlightStat("WHIP", stats.whip, accentColor)
                 }
             }
         }
@@ -345,10 +363,20 @@ fun QuickLookCard(player: Player) {
 }
 
 @Composable
-fun QuickStat(label: String, value: String) {
+fun HighlightStat(label: String, value: String, accentColor: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
-        Text(value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+        Text(
+            text = label, 
+            style = MaterialTheme.typography.labelSmall, 
+            color = accentColor,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = value, 
+            style = MaterialTheme.typography.headlineSmall, 
+            fontWeight = FontWeight.Black,
+            color = Color.Black
+        )
     }
 }
 
@@ -356,19 +384,18 @@ fun QuickStat(label: String, value: String) {
 fun StatsTable(player: Player) {
     val isPitcher = player.position.contains("P")
     val headers = if (!isPitcher) {
-        listOf("Season", "Team", "G", "PA", "HR", "AVG", "OBP", "SLG", "OPS")
+        listOf("Year", "Team", "G", "HR", "RBI", "AVG", "OPS")
     } else {
-        listOf("Season", "Team", "W", "L", "ERA", "G", "GS", "IP", "SO", "WHIP")
+        listOf("Year", "Team", "W-L", "ERA", "IP", "SO", "WHIP")
     }
 
-    Column(modifier = Modifier.fillMaxWidth()) {
-        // Table Header
+    Column(modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface, RoundedCornerShape(4.dp))) {
         Surface(color = Color(0xFF455A64)) {
-            Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+            Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
                 headers.forEachIndexed { index, header ->
                     Text(
                         text = header,
-                        modifier = Modifier.weight(if (index < 2) 1.5f else 1f),
+                        modifier = Modifier.weight(if (index < 2) 1.2f else 1f),
                         style = MaterialTheme.typography.labelSmall,
                         color = Color.White,
                         textAlign = TextAlign.Center,
@@ -382,27 +409,22 @@ fun StatsTable(player: Player) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 6.dp),
+                    .padding(vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (!isPitcher) {
-                    StatCell(stats.year, 1.5f)
-                    StatCell(stats.team, 1.5f)
+                    StatCell(stats.year, 1.2f, isYear = true)
+                    StatCell(stats.team, 1.2f)
                     StatCell(stats.games.toString())
-                    StatCell(stats.pa.toString())
                     StatCell(stats.hr.toString())
+                    StatCell(stats.rbi.toString())
                     StatCell(stats.avg)
-                    StatCell(stats.obp)
-                    StatCell(stats.slg)
                     StatCell(stats.ops)
                 } else {
-                    StatCell(stats.year, 1.5f)
-                    StatCell(stats.team, 1.5f)
-                    StatCell(stats.w.toString())
-                    StatCell(stats.l.toString())
+                    StatCell(stats.year, 1.2f, isYear = true)
+                    StatCell(stats.team, 1.2f)
+                    StatCell("${stats.w}-${stats.l}")
                     StatCell(stats.era)
-                    StatCell(stats.games.toString())
-                    StatCell("0") // GS missing in YearlyStats for now
                     StatCell(stats.ip)
                     StatCell(stats.k.toString())
                     StatCell(stats.whip)
@@ -414,12 +436,13 @@ fun StatsTable(player: Player) {
 }
 
 @Composable
-fun RowScope.StatCell(text: String, weight: Float = 1f) {
+fun RowScope.StatCell(text: String, weight: Float = 1f, isYear: Boolean = false) {
     Text(
         text = text,
         modifier = Modifier.weight(weight),
         style = MaterialTheme.typography.bodySmall,
         textAlign = TextAlign.Center,
+        fontWeight = if (isYear) FontWeight.Bold else FontWeight.Normal,
         fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
         maxLines = 1
     )

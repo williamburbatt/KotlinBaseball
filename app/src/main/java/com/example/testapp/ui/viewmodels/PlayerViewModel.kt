@@ -14,10 +14,12 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
+import java.util.Calendar
 import javax.inject.Inject
 
 data class PlayerGroup(
@@ -34,7 +36,9 @@ class PlayerViewModel @Inject constructor(
     private val route = savedStateHandle.toRoute<Screen.PlayerList>()
     val teamId = route.teamId
     
-    private val _selectedYear = MutableStateFlow(2024)
+    private val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+    
+    private val _selectedYear = MutableStateFlow(currentYear)
     val selectedYear: StateFlow<Int> = _selectedYear
 
     private val _isLoading = MutableStateFlow(false)
@@ -54,7 +58,7 @@ class PlayerViewModel @Inject constructor(
         repository.getPlayerDetail(playerId).onEach {
             _selectedPlayer.value = it
             _isLoading.value = false
-        }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+        }.launchIn(viewModelScope)
     }
 
     fun clearSelectedPlayer() {

@@ -58,7 +58,9 @@ fun TestAppTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.surface.toArgb()
+            // Note: statusBarColor is deprecated but still used in many templates.
+            // Since enableEdgeToEdge() is called in MainActivity, we can rely on that
+            // or use WindowInsetsController to manage appearance.
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }

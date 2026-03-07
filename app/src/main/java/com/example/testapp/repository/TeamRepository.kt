@@ -17,7 +17,7 @@ class TeamRepository @Inject constructor(
             val teams = response.teams.map { 
                 Team(
                     id = it.id,
-                    name = it.name,
+                    name = it.name ?: "",
                     teamName = it.teamName ?: ""
                 )
             }

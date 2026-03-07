@@ -21,7 +21,7 @@ class MlbStatsApi @Inject constructor(
 
     suspend fun getPlayerDetails(
         playerId: Int,
-        hydrate: String = "stats(group=[batting,pitching],type=[yearByYear,season])"
+        hydrate: String = "currentTeam,stats(group=[hitting,pitching,batting],type=[yearByYear,season])"
     ): PeopleResponse {
         return client.get("$baseUrl/v1/people/$playerId") {
             parameter("hydrate", hydrate)
@@ -33,15 +33,17 @@ class MlbStatsApi @Inject constructor(
         stats: String = "season",
         sportId: Int = 1,
         season: Int? = null,
-        startDate: String? = null,
-        endDate: String? = null
+        gameType: String = "R",
+        group: String? = null
     ): PlayerStatsResponse {
         return client.get("$baseUrl/v1/people/$playerId/stats") {
             parameter("stats", stats)
             parameter("sportId", sportId)
             parameter("season", season)
-            parameter("startDate", startDate)
-            parameter("endDate", endDate)
+            parameter("gameType", gameType)
+            if (group != null) {
+                parameter("group", group)
+            }
         }.body()
     }
 
@@ -74,7 +76,7 @@ class MlbStatsApi @Inject constructor(
 @Serializable
 data class TeamResponse(val teams: List<Team>)
 @Serializable
-data class Team(val id: Int, val name: String, val teamName: String? = null)
+data class Team(val id: Int, val name: String? = null, val teamName: String? = null)
 
 @Serializable
 data class PeopleResponse(val people: List<PersonDetails>)
@@ -94,6 +96,7 @@ data class PersonDetails(
     val birthStateProvince: String? = null,
     val birthCountry: String? = null,
     val mlbDebutDate: String? = null,
+    val currentTeam: Team? = null,
     val stats: List<StatContainer>? = null
 )
 
@@ -149,6 +152,7 @@ data class PlayerStats(
     val hits: Int? = null,
     val stolenBases: Int? = null,
     val strikeOuts: Int? = null,
+    val strikeouts: Int? = null,
     val baseOnBalls: Int? = null,
     // Pitching
     val era: String? = null,
@@ -157,8 +161,7 @@ data class PlayerStats(
     val inningsPitched: String? = null,
     val whip: String? = null,
     val gamesStarted: Int? = null,
-    val saves: Int? = null,
-    val strikeouts: Int? = null
+    val saves: Int? = null
 )
 
 @Serializable

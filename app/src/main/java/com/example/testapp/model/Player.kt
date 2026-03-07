@@ -7,6 +7,7 @@ data class Player(
     val id: String = "",
     val name: String = "",
     val team: String = "",
+    val teamId: Int? = null,
     val position: String = "",
     val number: String = "",
     val age: Int = 0,

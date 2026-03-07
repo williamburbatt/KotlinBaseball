@@ -3,6 +3,7 @@ package com.example.testapp.ui.components
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -66,6 +68,38 @@ fun TeamLogo(
                 contentDescription = "Team Logo",
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Fit
+            )
+        }
+    }
+}
+
+@Composable
+fun PlayerHeadshot(
+    playerId: String,
+    modifier: Modifier = Modifier
+) {
+    val headshotUrl = "https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_426,q_auto:best/v1/people/$playerId/headshot/67/current"
+    
+    Surface(
+        modifier = modifier,
+        shape = CircleShape,
+        color = Color.White,
+        shadowElevation = 2.dp
+    ) {
+        Box(
+            modifier = Modifier.padding(4.dp), // Less padding than logo
+            contentAlignment = Alignment.Center
+        ) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(headshotUrl)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = "Player Headshot",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
             )
         }
     }

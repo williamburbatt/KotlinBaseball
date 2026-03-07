@@ -30,8 +30,8 @@ class GameRepository @Inject constructor(
 
                 Game(
                     id = apiGame.gamePk,
-                    awayTeam = apiGame.teams.away.team.name,
-                    homeTeam = apiGame.teams.home.team.name,
+                    awayTeam = apiGame.teams.away.team.name ?: "",
+                    homeTeam = apiGame.teams.home.team.name ?: "",
                     awayScore = apiGame.teams.away.score,
                     homeScore = apiGame.teams.home.score,
                     status = apiGame.status.detailedState,
@@ -54,8 +54,8 @@ class GameRepository @Inject constructor(
             val response = api.getBoxscore(gameId)
             val boxScore = BoxScore(
                 gameId = gameId,
-                awayTeamName = response.teams.away.team.name,
-                homeTeamName = response.teams.home.team.name,
+                awayTeamName = response.teams.away.team.name ?: "",
+                homeTeamName = response.teams.home.team.name ?: "",
                 awayPlayers = response.teams.away.players.values.map { it.toModel() },
                 homePlayers = response.teams.home.players.values.map { it.toModel() }
             )
