@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -33,8 +34,13 @@ class PlayerViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val route = savedStateHandle.toRoute<Screen.PlayerList>()
-    val teamId = route.teamId
+    private val route: Screen.PlayerList? = try {
+        savedStateHandle.toRoute<Screen.PlayerList>()
+    } catch (e: Exception) {
+        null
+    }
+    
+    val teamId = route?.teamId ?: 0
     
     private val currentYear = Calendar.getInstance().get(Calendar.YEAR)
     
@@ -66,31 +72,35 @@ class PlayerViewModel @Inject constructor(
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val groupedPlayers: StateFlow<List<PlayerGroup>> = combine(
-        MutableStateFlow(teamId),
-        _selectedYear
-    ) { id, year ->
-        id to year
-    }.flatMapLatest { (id, year) ->
-        repository.getPlayers(id, year)
-            .onStart { _isLoading.value = true }
-            .onEach { _isLoading.value = false }
-    }.map { players ->
-        val batters = players.filter { it.position != "P" && it.position != "SP" && it.position != "RP" && it.position != "TWP"}
-            .sortedWith(compareBy({ positionOrder.indexOf(it.position).takeIf { it != -1 } ?: 99 }, { it.name }))
-        
-        val pitchers = players.filter { it.position == "P" || it.position == "SP" || it.position == "RP" || it.position == "TWP" }
-            .sortedBy { it.name }
+    val groupedPlayers: StateFlow<List<PlayerGroup>> = if (route == null) {
+        flowOf(emptyList<PlayerGroup>()).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    } else {
+        combine(
+            MutableStateFlow(teamId),
+            _selectedYear
+        ) { id, year ->
+            id to year
+        }.flatMapLatest { (id, year) ->
+            repository.getPlayers(id, year)
+                .onStart { _isLoading.value = true }
+                .onEach { _isLoading.value = false }
+        }.map { players ->
+            val batters = players.filter { it.position != "P" && it.position != "SP" && it.position != "RP" && it.position != "TWP" }
+                .sortedWith(compareBy({ positionOrder.indexOf(it.position).takeIf { it != -1 } ?: 99 }, { it.name }))
 
-        listOf(
-            PlayerGroup("Batters", batters),
-            PlayerGroup("Pitchers", pitchers)
-        ).filter { it.players.isNotEmpty() }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
+            val pitchers = players.filter { it.position == "P" || it.position == "SP" || it.position == "RP" || it.position == "TWP" }
+                .sortedBy { it.name }
+
+            listOf(
+                PlayerGroup("Batters", batters),
+                PlayerGroup("Pitchers", pitchers)
+            ).filter { it.players.isNotEmpty() }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+    }
 
     val players: StateFlow<List<Player>> = groupedPlayers.map { groups -> groups.flatMap { it.players } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())

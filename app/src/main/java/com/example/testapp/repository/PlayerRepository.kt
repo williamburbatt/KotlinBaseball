@@ -3,6 +3,7 @@ package com.example.testapp.repository
 import com.example.testapp.api.MlbStatsApi
 import com.example.testapp.model.Player
 import com.example.testapp.model.YearlyStats
+import com.example.testapp.ui.theme.TeamColors
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -29,12 +30,18 @@ class PlayerRepository @Inject constructor(
                         val isPitcher = position == "P" || position == "SP" || position == "RP" || position == "TWP"
                         val group = if (isPitcher) "pitching" else "hitting"
 
+                        val sportId = when {
+                            teamId < 200 -> 1 // MLB
+                            teamId < 1000 -> 11 // Assume AAA
+                            else -> 12 // Fallback to AA/Others
+                        }
+
                         val statsResponse = try {
                             api.getPlayerStats(
                                 playerId = playerId,
                                 stats = "season",
                                 season = year,
-                                sportId = if (teamId < 200) 1 else 11,
+                                sportId = sportId,
                                 group = group
                             )
                         } catch (e: Exception) {
@@ -46,11 +53,11 @@ class PlayerRepository @Inject constructor(
                         Player(
                             id = playerId.toString(),
                             name = rosterPlayer.person.fullName,
-                            team = "Team $teamId",
+                            team = TeamColors.getTeamAbbreviation(teamId) ?: "Team $teamId",
                             teamId = teamId,
                             position = position,
                             currentStats = if (playerStats != null) {
-                                mapApiStatsToYearly(playerStats, year.toString(), "Team $teamId", isPitcher)
+                                mapApiStatsToYearly(playerStats, year.toString(), TeamColors.getTeamAbbreviation(teamId) ?: "Team $teamId", isPitcher)
                             } else null
                         )
                     }
@@ -76,44 +83,52 @@ class PlayerRepository @Inject constructor(
                 val historyMap = mutableMapOf<String, YearlyStats>()
                 val milbHistoryMap = mutableMapOf<String, YearlyStats>()
 
-                // Fetch MLB Stats
-                val mlbHitting = try { api.getPlayerStats(playerId, stats = "yearByYear", group = "hitting", sportId = 1) } catch (e: Exception) { null }
-                val mlbPitching = try { api.getPlayerStats(playerId, stats = "yearByYear", group = "pitching", sportId = 1) } catch (e: Exception) { null }
+                val sportIds = listOf(1, 11, 12, 13, 14, 15)
+                
+                coroutineScope {
+                    sportIds.map { sportId ->
+                        async {
+                            val hitting = try { api.getPlayerStats(playerId, stats = "yearByYear", group = "hitting", sportId = sportId) } catch (e: Exception) { null }
+                            val pitching = try { api.getPlayerStats(playerId, stats = "yearByYear", group = "pitching", sportId = sportId) } catch (e: Exception) { null }
+                            
+                            val targetMap = if (sportId == 1) historyMap else milbHistoryMap
+                            val leagueSuffix = when(sportId) {
+                                1 -> "MLB"
+                                11 -> "AAA"
+                                12 -> "AA"
+                                13 -> "A+"
+                                14 -> "A"
+                                else -> "MiLB"
+                            }
 
-                // Fetch MiLB Stats
-                val milbHitting = try { api.getPlayerStats(playerId, stats = "yearByYear", group = "hitting", sportId = 11) } catch (e: Exception) { null }
-                val milbPitching = try { api.getPlayerStats(playerId, stats = "yearByYear", group = "pitching", sportId = 11) } catch (e: Exception) { null }
-
-                // Process MLB
-                mlbHitting?.stats?.forEach { container ->
-                    container.splits.forEach { split ->
-                        val year = split.season ?: return@forEach
-                        historyMap[year] = mapApiStatsToYearly(split.stat, year, split.team?.abbreviation ?: split.team?.name ?: "MLB", false)
-                    }
-                }
-                mlbPitching?.stats?.forEach { container ->
-                    container.splits.forEach { split ->
-                        val year = split.season ?: return@forEach
-                        val existing = historyMap[year]
-                        val pitching = mapApiStatsToYearly(split.stat, year, split.team?.abbreviation ?: split.team?.name ?: "MLB", true)
-                        historyMap[year] = if (existing != null) mergeStats(existing, pitching) else pitching
-                    }
-                }
-
-                // Process MiLB
-                milbHitting?.stats?.forEach { container ->
-                    container.splits.forEach { split ->
-                        val year = split.season ?: return@forEach
-                        milbHistoryMap[year] = mapApiStatsToYearly(split.stat, year, split.team?.abbreviation ?: split.team?.name ?: "MiLB", false)
-                    }
-                }
-                milbPitching?.stats?.forEach { container ->
-                    container.splits.forEach { split ->
-                        val year = split.season ?: return@forEach
-                        val existing = milbHistoryMap[year]
-                        val pitching = mapApiStatsToYearly(split.stat, year, split.team?.abbreviation ?: split.team?.name ?: "MiLB", true)
-                        milbHistoryMap[year] = if (existing != null) mergeStats(existing, pitching) else pitching
-                    }
+                            hitting?.stats?.forEach { container ->
+                                container.splits.forEach { split ->
+                                    val year = split.season ?: return@forEach
+                                    val teamId = split.team?.id
+                                    val teamDisplay = TeamColors.getTeamAbbreviation(teamId) ?: split.team?.abbreviation ?: split.team?.name ?: leagueSuffix
+                                    val teamKey = "${year}_${teamId ?: 0}"
+                                    val stat = mapApiStatsToYearly(split.stat, year, teamDisplay, false)
+                                    synchronized(targetMap) {
+                                        targetMap[teamKey] = stat
+                                    }
+                                }
+                            }
+                            
+                            pitching?.stats?.forEach { container ->
+                                container.splits.forEach { split ->
+                                    val year = split.season ?: return@forEach
+                                    val teamId = split.team?.id
+                                    val teamDisplay = TeamColors.getTeamAbbreviation(teamId) ?: split.team?.abbreviation ?: split.team?.name ?: leagueSuffix
+                                    val teamKey = "${year}_${teamId ?: 0}"
+                                    val stat = mapApiStatsToYearly(split.stat, year, teamDisplay, true)
+                                    synchronized(targetMap) {
+                                        val existing = targetMap[teamKey]
+                                        targetMap[teamKey] = if (existing != null) mergeStats(existing, stat) else stat
+                                    }
+                                }
+                            }
+                        }
+                    }.awaitAll()
                 }
 
                 val history = historyMap.values.sortedByDescending { it.year }
@@ -123,10 +138,6 @@ class PlayerRepository @Inject constructor(
                 val birthPlace = listOfNotNull(person.birthCity, person.birthStateProvince, person.birthCountry).joinToString(", ")
 
                 val currentTeamId = person.currentTeam?.id
-                    ?: mlbHitting?.stats?.flatMap { it.splits }?.find { it.season == currentYearStr }?.team?.id
-                    ?: mlbPitching?.stats?.flatMap { it.splits }?.find { it.season == currentYearStr }?.team?.id
-                    ?: milbHitting?.stats?.flatMap { it.splits }?.find { it.season == currentYearStr }?.team?.id
-                    ?: milbPitching?.stats?.flatMap { it.splits }?.find { it.season == currentYearStr }?.team?.id
 
                 emit(Player(
                     id = person.id.toString(),

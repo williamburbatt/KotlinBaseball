@@ -71,6 +71,14 @@ class MlbStatsApi @Inject constructor(
     suspend fun getBoxscore(gamePk: Int): BoxscoreResponse {
         return client.get("$baseUrl/v1/game/$gamePk/boxscore").body()
     }
+
+    suspend fun searchPlayers(query: String): PeopleResponse {
+        return client.get("$baseUrl/v1/people/search") {
+            parameter("names", query)
+            parameter("activeStatus", "BOTH")
+            parameter("hydrate", "currentTeam")
+        }.body()
+    }
 }
 
 @Serializable

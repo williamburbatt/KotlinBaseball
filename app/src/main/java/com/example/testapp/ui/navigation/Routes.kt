@@ -25,4 +25,10 @@ sealed interface Screen {
         val awayTeam: String,
         val homeTeam: String
     ) : Screen
+
+    @Serializable
+    data object PlayerSearch : Screen
+
+    @Serializable
+    data class PlayerDetail(val playerId: Int) : Screen
 }

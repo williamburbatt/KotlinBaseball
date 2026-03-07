@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -33,7 +34,8 @@ import com.example.testapp.R
 @Composable
 fun MainHubScreen(
     onGamesClick: () -> Unit,
-    onTeamsClick: () -> Unit
+    onTeamsClick: () -> Unit,
+    onSearchClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -51,7 +53,7 @@ fun MainHubScreen(
         Spacer(modifier = Modifier.height(32.dp))
         
         Text(
-            text = "Baseball Hub",
+            text = "Kotlin Baseball",
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary
@@ -75,6 +77,13 @@ fun MainHubScreen(
                 description = "Browse teams and player stats",
                 icon = Icons.AutoMirrored.Filled.List,
                 onClick = onTeamsClick
+            )
+
+            HubCard(
+                title = "Player Lookup",
+                description = "Search for any player directly",
+                icon = Icons.Default.Search,
+                onClick = onSearchClick
             )
         }
     }

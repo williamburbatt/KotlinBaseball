@@ -8,6 +8,7 @@ import com.example.testapp.model.BattingStats
 import com.example.testapp.model.PitchingStats
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
@@ -23,7 +24,8 @@ class GameRepository @Inject constructor(
             val games = response.dates.flatMap { it.games }.map { apiGame ->
                 val localStartTime = try {
                     val zonedDateTime = ZonedDateTime.parse(apiGame.gameDate)
-                    zonedDateTime.format(DateTimeFormatter.ofPattern("h:mm a"))
+                    val localDateTime = zonedDateTime.withZoneSameInstant(ZoneId.systemDefault())
+                    localDateTime.format(DateTimeFormatter.ofPattern("h:mm a"))
                 } catch (e: Exception) {
                     null
                 }

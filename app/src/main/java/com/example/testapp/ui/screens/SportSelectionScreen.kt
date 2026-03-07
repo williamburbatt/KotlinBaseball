@@ -77,11 +77,35 @@ fun SportSelectionScreen(onSportClick: (Int) -> Unit) {
             )
             
             SportCard(
-                name = "Minor League",
-                description = "MiLB - The Future Stars",
+                name = "Triple-A",
+                description = "International & Pacific Coast Leagues",
                 iconRes = R.drawable.ic_logo_diamond,
-                iconColor = Color(0xFFBA0C2F), // MLB Red
+                iconColor = Color(0xFFBA0C2F), // AAA Red
                 onClick = { onSportClick(11) }
+            )
+            
+            SportCard(
+                name = "Double-A",
+                description = "Eastern, Southern & Texas Leagues",
+                iconRes = R.drawable.ic_logo_diamond,
+                iconColor = Color(0xFF005A9C), // AA Blue
+                onClick = { onSportClick(12) }
+            )
+            
+            SportCard(
+                name = "High-A",
+                description = "South Atlantic, Midwest & NW Leagues",
+                iconRes = R.drawable.ic_logo_diamond,
+                iconColor = Color(0xFF003831), // High-A Green
+                onClick = { onSportClick(13) }
+            )
+            
+            SportCard(
+                name = "Single-A",
+                description = "California, Carolina & Florida State Leagues",
+                iconRes = R.drawable.ic_logo_diamond,
+                iconColor = Color(0xFFFD5A1E), // Single-A Orange
+                onClick = { onSportClick(14) }
             )
         }
     }
