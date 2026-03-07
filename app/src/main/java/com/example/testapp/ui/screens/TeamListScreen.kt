@@ -1,5 +1,8 @@
 package com.example.testapp.ui.screens
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,28 +32,41 @@ import com.example.testapp.model.Team
 import com.example.testapp.ui.components.TeamLogo
 import com.example.testapp.ui.viewmodels.TeamViewModel
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun TeamListScreen(
     onTeamClick: (Int) -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
     viewModel: TeamViewModel = hiltViewModel()
 ) {
     val teams by viewModel.teams.collectAsStateWithLifecycle()
 
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
         LazyColumn(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
-            // Added key = { it.id } to optimize performance
             items(
                 items = teams,
                 key = { team -> team.id }
             ) { team ->
-                TeamCard(team = team, onClick = { onTeamClick(team.id) })
+                TeamCard(
+                    team = team, 
+                    onClick = { onTeamClick(team.id) },
+                    sharedTransitionScope = sharedTransitionScope,
+                    animatedVisibilityScope = animatedVisibilityScope
+                )
             }
         }
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun TeamCard(team: Team, onClick: () -> Unit) {
+fun TeamCard(
+    team: Team, 
+    onClick: () -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -63,7 +79,12 @@ fun TeamCard(team: Team, onClick: () -> Unit) {
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            TeamLogo(teamId = team.id, modifier = Modifier.size(64.dp))
+            TeamLogo(
+                teamId = team.id, 
+                modifier = Modifier.size(64.dp),
+                sharedTransitionScope = sharedTransitionScope,
+                animatedVisibilityScope = animatedVisibilityScope
+            )
             
             Spacer(modifier = Modifier.width(16.dp))
             Column {

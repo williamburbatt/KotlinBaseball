@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialization)
+    id("androidx.baselineprofile")
 }
 
 android {
@@ -28,6 +29,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug") // For local profile testing
         }
     }
     compileOptions {
@@ -43,6 +45,13 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+}
+
+baselineProfile {
+    // This connects the app to the benchmark module we'll create next
+    filter {
+        include("com.example.testapp.**")
     }
 }
 
@@ -73,12 +82,15 @@ dependencies {
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.kotlinx.serialization.json)
     
-    // OkHttp Logging (still useful for the Ktor OkHttp engine)
+    // OkHttp Logging
     implementation(libs.okhttp.logging)
     
-    // Coil (Image Loading)
+    // Coil
     implementation(libs.coil.compose)
     implementation(libs.coil.svg)
+
+    // Baseline Profile
+    implementation("androidx.profileinstaller:profileinstaller:1.4.1")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

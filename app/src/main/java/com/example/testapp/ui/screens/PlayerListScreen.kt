@@ -1,5 +1,8 @@
 package com.example.testapp.ui.screens
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,6 +31,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,9 +50,11 @@ import com.example.testapp.ui.components.TeamLogo
 import com.example.testapp.ui.viewmodels.PlayerViewModel
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun PlayerListScreen(
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
     viewModel: PlayerViewModel = hiltViewModel()
 ) {
     val groupedPlayers by viewModel.groupedPlayers.collectAsStateWithLifecycle()
@@ -70,7 +76,12 @@ fun PlayerListScreen(
                         .padding(top = 48.dp, start = 16.dp, end = 16.dp, bottom = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TeamLogo(teamId = teamId, modifier = Modifier.size(48.dp))
+                    TeamLogo(
+                        teamId = teamId, 
+                        modifier = Modifier.size(48.dp),
+                        sharedTransitionScope = sharedTransitionScope,
+                        animatedVisibilityScope = animatedVisibilityScope
+                    )
                     Spacer(Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(text = "Roster", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -112,7 +123,6 @@ fun PlayerListScreen(
                         item(key = "header_${group.title}") {
                             SectionHeader(title = group.title)
                         }
-                        // Added key = { it.id } here
                         items(
                             items = group.players,
                             key = { player -> player.id }

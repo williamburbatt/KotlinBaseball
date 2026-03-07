@@ -23,6 +23,8 @@ private val DarkColorScheme = darkColorScheme(
     surface = Color(0xFF1A1C1E),
     onBackground = GhostWhite,
     onSurface = GhostWhite,
+    surfaceVariant = DarkSteel,
+    onSurfaceVariant = IcyBlue,
     outline = CoolSteel
 )
 
@@ -40,6 +42,8 @@ private val LightColorScheme = lightColorScheme(
     surface = LightSurface,
     onBackground = Color.Black,
     onSurface = Color.Black,
+    surfaceVariant = BabyBlueIce.copy(alpha = 0.3f),
+    onSurfaceVariant = DarkSteel,
     outline = LightOutline
 )
 

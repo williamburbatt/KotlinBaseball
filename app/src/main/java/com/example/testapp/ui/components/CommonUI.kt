@@ -1,5 +1,8 @@
 package com.example.testapp.ui.components
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,12 +27,29 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun TeamLogo(teamId: Int, modifier: Modifier = Modifier) {
+fun TeamLogo(
+    teamId: Int, 
+    modifier: Modifier = Modifier,
+    sharedTransitionScope: SharedTransitionScope? = null,
+    animatedVisibilityScope: AnimatedVisibilityScope? = null
+) {
     val logoUrl = "https://www.mlbstatic.com/team-logos/$teamId.svg"
     
+    val sharedModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+        with(sharedTransitionScope) {
+            Modifier.sharedElement(
+                rememberSharedContentState(key = "logo_$teamId"),
+                animatedVisibilityScope = animatedVisibilityScope
+            )
+        }
+    } else {
+        Modifier
+    }
+
     Surface(
-        modifier = modifier,
+        modifier = modifier.then(sharedModifier),
         shape = CircleShape,
         color = Color.White,
         shadowElevation = 2.dp
