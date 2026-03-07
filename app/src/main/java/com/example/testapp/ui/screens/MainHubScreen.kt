@@ -28,7 +28,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.testapp.R
 
 @Composable
@@ -44,7 +43,7 @@ fun MainHubScreen(
         verticalArrangement = Arrangement.Center
     ) {
         Image(
-            painter = painterResource(id = R.drawable.ic_logo_diamond),
+            painter = painterResource(id = R.drawable.ic_logo_classic_ball),
             contentDescription = "App Logo",
             modifier = Modifier.size(120.dp)
         )

@@ -185,13 +185,14 @@ fun PlayerListScreen(
 
 @Composable
 fun PlayerCard(player: Player, onClick: () -> Unit) {
+    val teamColor = TeamColors.getTeamColor(player.teamId)
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+        colors = CardDefaults.cardColors(containerColor = teamColor.copy(alpha = 0.1f))
     ) {
         Row(
             modifier = Modifier.padding(12.dp),
@@ -293,7 +294,7 @@ fun DetailedPlayerCard(player: Player, onClose: () -> Unit) {
             ) {
                 item {
                     val displayYear = player.currentStats?.year ?: currentYear
-                    val accentColor = if (teamColor == Color.Gray) Color(0xFF002D72) else teamColor
+                    val accentColor = if (teamColor == Color.LightGray) Color(0xFF002D72) else teamColor
                     
                     Text(
                         "$displayYear SEASON HIGHLIGHTS",
@@ -307,7 +308,7 @@ fun DetailedPlayerCard(player: Player, onClose: () -> Unit) {
                 }
 
                 item {
-                    val accentColor = if (teamColor == Color.Gray) Color(0xFF002D72) else teamColor
+                    val accentColor = if (teamColor == Color.LightGray) Color(0xFF002D72) else teamColor
                     Text(
                         "CAREER HISTORY",
                         style = MaterialTheme.typography.labelLarge,
@@ -375,7 +376,7 @@ fun HighlightStat(label: String, value: String, accentColor: Color) {
             text = value, 
             style = MaterialTheme.typography.headlineSmall, 
             fontWeight = FontWeight.Black,
-            color = Color.Black
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }
