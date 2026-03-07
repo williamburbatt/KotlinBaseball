@@ -4,14 +4,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.testapp.ui.navigation.NavTransitions
 import com.example.testapp.ui.navigation.Screen
 import com.example.testapp.ui.screens.BoxScoreScreen
 import com.example.testapp.ui.screens.GameListScreen
@@ -34,31 +30,10 @@ class MainActivity : ComponentActivity() {
                 NavHost(
                     navController = navController,
                     startDestination = Screen.MainHub,
-                    // Default transitions for all screens in this NavHost
-                    enterTransition = {
-                        slideInHorizontally(
-                            initialOffsetX = { it },
-                            animationSpec = tween(300)
-                        ) + fadeIn(animationSpec = tween(300))
-                    },
-                    exitTransition = {
-                        slideOutHorizontally(
-                            targetOffsetX = { -it },
-                            animationSpec = tween(300)
-                        ) + fadeOut(animationSpec = tween(300))
-                    },
-                    popEnterTransition = {
-                        slideInHorizontally(
-                            initialOffsetX = { -it },
-                            animationSpec = tween(300)
-                        ) + fadeIn(animationSpec = tween(300))
-                    },
-                    popExitTransition = {
-                        slideOutHorizontally(
-                            targetOffsetX = { it },
-                            animationSpec = tween(300)
-                        ) + fadeOut(animationSpec = tween(300))
-                    }
+                    enterTransition = { NavTransitions.enter() },
+                    exitTransition = { NavTransitions.exit() },
+                    popEnterTransition = { NavTransitions.popEnter() },
+                    popExitTransition = { NavTransitions.popExit() }
                 ) {
                     composable<Screen.MainHub> {
                         MainHubScreen(
