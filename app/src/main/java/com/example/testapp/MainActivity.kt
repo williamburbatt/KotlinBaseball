@@ -2,6 +2,7 @@ package com.example.testapp
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
@@ -56,6 +57,11 @@ class MainActivity : ComponentActivity() {
                 val globalPlayerViewModel: PlayerViewModel = hiltViewModel()
                 val selectedPlayer by globalPlayerViewModel.selectedPlayer.collectAsStateWithLifecycle()
                 val isPlayerLoading by globalPlayerViewModel.isLoading.collectAsStateWithLifecycle()
+
+                // Intercept back button if player card is open
+                BackHandler(enabled = selectedPlayer != null) {
+                    globalPlayerViewModel.clearSelectedPlayer()
+                }
 
                 Box(modifier = Modifier.fillMaxSize()) {
                     SharedTransitionLayout {

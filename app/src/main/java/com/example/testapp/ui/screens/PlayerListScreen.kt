@@ -295,7 +295,7 @@ fun DetailedPlayerCard(player: Player, onClose: () -> Unit) {
                             color = Color.White
                         )
                         Text(
-                            text = "${player.team} | #${player.number}",
+                            text = "${player.team} | ${player.position} | #${player.number}",
                             style = MaterialTheme.typography.titleMedium,
                             color = Color.White.copy(alpha = 0.8f)
                         )
@@ -303,19 +303,6 @@ fun DetailedPlayerCard(player: Player, onClose: () -> Unit) {
                             text = "Age: ${player.age} | B/T: ${player.bats}/${player.throws} | ${player.height}/${player.weight}",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.White.copy(alpha = 0.8f)
-                        )
-                    }
-                    Spacer(modifier = Modifier.weight(1f))
-                    Surface(
-                        color = Color.White.copy(alpha = 0.2f),
-                        shape = RoundedCornerShape(4.dp)
-                    ) {
-                        Text(
-                            text = player.position,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Black,
-                            color = Color.White
                         )
                     }
                 }

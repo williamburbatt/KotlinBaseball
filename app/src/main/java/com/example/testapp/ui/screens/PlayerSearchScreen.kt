@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.testapp.api.PersonDetails
+import com.example.testapp.api.Position
 import com.example.testapp.api.Team
 import com.example.testapp.ui.components.PlayerHeadshot
 import com.example.testapp.ui.viewmodels.PlayerSearchViewModel
@@ -276,26 +277,21 @@ fun SearchResultItem(person: PersonDetails, onClick: () -> Unit) {
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
+                
+                val teamName = person.currentTeam?.name ?: "Free Agent"
+                val position = person.primaryPosition?.abbreviation ?: ""
+                val number = person.primaryNumber
+                
+                val metadataParts = mutableListOf<String>()
+                metadataParts.add(teamName)
+                if (position.isNotEmpty()) metadataParts.add(position)
+                if (!number.isNullOrEmpty()) metadataParts.add("#$number")
+                
                 Text(
-                    text = person.currentTeam?.name ?: "Free Agent",
+                    text = metadataParts.joinToString(" | "),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Medium
-                )
-            }
-            
-            Spacer(modifier = Modifier.weight(1f))
-            
-            Surface(
-                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
-                shape = RoundedCornerShape(4.dp)
-            ) {
-                Text(
-                    text = person.primaryNumber ?: "",
-                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
                 )
             }
         }
@@ -313,13 +309,15 @@ fun PlayerSearchPreview() {
                     id = 592450, 
                     fullName = "Aaron Judge", 
                     primaryNumber = "99",
-                    currentTeam = Team(id = 161, name = "New York Yankees")
+                    currentTeam = Team(id = 161, name = "New York Yankees"),
+                    primaryPosition = Position(abbreviation = "OF")
                 ),
                 PersonDetails(
                     id = 643338, 
                     fullName = "Aaron Hicks", 
                     primaryNumber = "31",
-                    currentTeam = Team(id = 110, name = "Baltimore Orioles")
+                    currentTeam = Team(id = 110, name = "Baltimore Orioles"),
+                    primaryPosition = Position(abbreviation = "OF")
                 )
             ),
             isSearching = false,
