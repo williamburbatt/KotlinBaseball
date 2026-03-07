@@ -25,6 +25,7 @@ class GameRepository @Inject constructor(
                 val response = api.getSchedule(date = date)
                 val games = response.dates.flatMap { dateEntry ->
                     dateEntry.games.map { apiGame ->
+                        val isLive = apiGame.status.abstractGameState == "Live"
                         Game(
                             id = apiGame.gamePk,
                             awayTeam = apiGame.teams.away.team.name ?: "",
@@ -36,7 +37,17 @@ class GameRepository @Inject constructor(
                             awayHits = apiGame.linescore?.teams?.away?.hits,
                             homeHits = apiGame.linescore?.teams?.home?.hits,
                             awayErrors = apiGame.linescore?.teams?.away?.errors,
-                            homeErrors = apiGame.linescore?.teams?.home?.errors
+                            homeErrors = apiGame.linescore?.teams?.home?.errors,
+                            isLive = isLive,
+                            currentInning = apiGame.linescore?.currentInning,
+                            currentInningOrdinal = apiGame.linescore?.currentInningOrdinal,
+                            inningHalf = apiGame.linescore?.inningHalf,
+                            outs = apiGame.linescore?.outs,
+                            runnerOnFirst = apiGame.linescore?.offense?.first != null,
+                            runnerOnSecond = apiGame.linescore?.offense?.second != null,
+                            runnerOnThird = apiGame.linescore?.offense?.third != null,
+                            awayTeamId = apiGame.teams.away.team.id,
+                            homeTeamId = apiGame.teams.home.team.id
                         )
                     }
                 }

@@ -14,7 +14,18 @@ data class Game(
     val awayHits: Int? = null,
     val homeHits: Int? = null,
     val awayErrors: Int? = null,
-    val homeErrors: Int? = null
+    val homeErrors: Int? = null,
+    // Live Data
+    val isLive: Boolean = false,
+    val currentInning: Int? = null,
+    val currentInningOrdinal: String? = null,
+    val inningHalf: String? = null,
+    val outs: Int? = null,
+    val runnerOnFirst: Boolean = false,
+    val runnerOnSecond: Boolean = false,
+    val runnerOnThird: Boolean = false,
+    val awayTeamId: Int = 0,
+    val homeTeamId: Int = 0
 )
 
 @Serializable

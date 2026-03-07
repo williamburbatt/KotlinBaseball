@@ -45,8 +45,16 @@ class GameViewModel @Inject constructor(
             _isLoading.value = true
             val dateString = _selectedDate.value.format(DateTimeFormatter.ISO_LOCAL_DATE)
             // autoRefresh = true will cause the flow to emit updated data every 5 seconds
-            repository.getGamesForDate(dateString, autoRefresh = true).collect {
-                _games.value = it
+            repository.getGamesForDate(dateString, autoRefresh = true).collect { unsortedGames ->
+                val sortedGames = unsortedGames.sortedWith(compareBy<Game> { 
+                    when {
+                        it.isLive -> 0
+                        it.status != "Final" -> 1
+                        else -> 2
+                    }
+                }.thenBy { it.startTime })
+                
+                _games.value = sortedGames
                 _isLoading.value = false
             }
         }

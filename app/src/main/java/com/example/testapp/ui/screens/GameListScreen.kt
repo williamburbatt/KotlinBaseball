@@ -1,5 +1,6 @@
 package com.example.testapp.ui.screens
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -44,13 +45,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.testapp.model.Game
+import com.example.testapp.ui.components.TeamLogo
 import com.example.testapp.ui.theme.TestAppTheme
 import com.example.testapp.ui.viewmodels.GameViewModel
 import java.time.Instant
@@ -62,8 +67,7 @@ import java.util.Locale
 
 @Composable
 fun GameListScreen(
-    onGameClick: (Game) -> Unit,
-    viewModel: GameViewModel = hiltViewModel()
+    onGameClick: (Game) -> Unit, viewModel: GameViewModel = hiltViewModel()
 ) {
     val selectedDate by viewModel.selectedDate.collectAsStateWithLifecycle()
     val games by viewModel.games.collectAsStateWithLifecycle()
@@ -103,8 +107,7 @@ fun GameListContent(
                         Column {
                             Text(
                                 text = selectedDate.month.getDisplayName(
-                                    TextStyle.FULL,
-                                    Locale.getDefault()
+                                    TextStyle.FULL, Locale.getDefault()
                                 ),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.primary
@@ -126,19 +129,19 @@ fun GameListContent(
                     }
 
                     DateScroller(
-                        selectedDate = selectedDate,
-                        onDateSelected = onDateSelected
+                        selectedDate = selectedDate, onDateSelected = onDateSelected
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
                 }
             }
-        }
-    ) { innerPadding ->
-        Box(modifier = Modifier
-            .padding(innerPadding)
-            .fillMaxSize()) {
-            if (isLoading) {
+        }) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+        ) {
+            if (isLoading && games.isEmpty()) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else if (games.isEmpty()) {
                 Column(
@@ -162,32 +165,29 @@ fun GameListContent(
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 12.dp)
                 ) {
                     items(
-                        items = games,
-                        key = { game -> game.id }
-                    ) { game ->
-                        GameScoreCard(game = game, onClick = { onGameClick(game) })
+                        items = games, key = { game -> game.id }) { game ->
+                        if (game.isLive) {
+                            LiveGameCard(game = game, onClick = { onGameClick(game) })
+                        } else {
+                            GameScoreCard(game = game, onClick = { onGameClick(game) })
+                        }
                     }
                 }
             }
         }
 
         if (showDatePicker) {
-            M3DatePickerDialog(
-                initialDate = selectedDate,
-                onDateSelected = {
-                    it?.let { onDateSelected(it) }
-                    showDatePicker = false
-                },
-                onDismiss = { showDatePicker = false }
-            )
+            M3DatePickerDialog(initialDate = selectedDate, onDateSelected = {
+                it?.let { onDateSelected(it) }
+                showDatePicker = false
+            }, onDismiss = { showDatePicker = false })
         }
     }
 }
 
 @Composable
 fun DateScroller(
-    selectedDate: LocalDate,
-    onDateSelected: (LocalDate) -> Unit
+    selectedDate: LocalDate, onDateSelected: (LocalDate) -> Unit
 ) {
     val listState = rememberLazyListState()
     val dates = remember(selectedDate) {
@@ -207,15 +207,10 @@ fun DateScroller(
         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp)
     ) {
         items(
-            items = dates,
-            key = { date -> date.toString() }
-        ) { date ->
+            items = dates, key = { date -> date.toString() }) { date ->
             val isSelected = date == selectedDate
             DateItem(
-                date = date,
-                isSelected = isSelected,
-                onClick = { onDateSelected(date) }
-            )
+                date = date, isSelected = isSelected, onClick = { onDateSelected(date) })
         }
     }
 }
@@ -249,40 +244,204 @@ fun DateItem(date: LocalDate, isSelected: Boolean, onClick: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun M3DatePickerDialog(
-    initialDate: LocalDate,
-    onDateSelected: (LocalDate?) -> Unit,
-    onDismiss: () -> Unit
+    initialDate: LocalDate, onDateSelected: (LocalDate?) -> Unit, onDismiss: () -> Unit
 ) {
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = initialDate.atStartOfDay(ZoneId.systemDefault()).toInstant()
             .toEpochMilli()
     )
 
-    DatePickerDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(onClick = {
-                val selectedMillis = datePickerState.selectedDateMillis
-                if (selectedMillis != null) {
-                    val date = Instant.ofEpochMilli(selectedMillis)
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDate()
-                    onDateSelected(date)
-                } else {
-                    onDismiss()
-                }
-            }) {
-                Text("Confirm")
+    DatePickerDialog(onDismissRequest = onDismiss, confirmButton = {
+        TextButton(onClick = {
+            val selectedMillis = datePickerState.selectedDateMillis
+            if (selectedMillis != null) {
+                val date = Instant.ofEpochMilli(selectedMillis).atZone(ZoneId.systemDefault())
+                    .toLocalDate()
+                onDateSelected(date)
+            } else {
+                onDismiss()
             }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
+        }) {
+            Text("Confirm")
         }
-    ) {
+    }, dismissButton = {
+        TextButton(onClick = onDismiss) {
+            Text("Cancel")
+        }
+    }) {
         DatePicker(state = datePickerState)
     }
+}
+
+@Composable
+fun LiveGameCard(game: Game, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Team Scores & Info
+                Column(modifier = Modifier.weight(1f).padding(end = 16.dp)) {
+                    LiveTeamRow(
+                        teamId = game.awayTeamId,
+                        name = game.awayTeam,
+                        score = game.awayScore ?: 0
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LiveTeamRow(
+                        teamId = game.homeTeamId,
+                        name = game.homeTeam,
+                        score = game.homeScore ?: 0
+                    )
+                }
+
+                // Vertical Divider
+                Box(
+                    modifier = Modifier
+                        .height(60.dp)
+                        .width(1.dp)
+                        .background(MaterialTheme.colorScheme.outlineVariant)
+                )
+
+                // Inning, Outs & Diamond
+                Row(
+                    modifier = Modifier.padding(start = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "${game.inningHalf} ${game.currentInningOrdinal}",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Red
+                        )
+                        Text(
+                            text = "${game.outs} Outs",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    DiamondView(
+                        first = game.runnerOnFirst,
+                        second = game.runnerOnSecond,
+                        third = game.runnerOnThird
+                    )
+                }
+            }
+        }
+    }
+}
+
+@androidx.compose.ui.tooling.preview.Preview
+@Composable
+fun LiveGameCardPreview() {
+    val mockGame = Game(
+        id = 1,
+        awayTeam = "Nicaragua",
+        homeTeam = "Netherlands",
+        awayScore = 3,
+        homeScore = 1,
+        status = "In Progress",
+        startTime = "2024-10-25T23:05:00Z",
+        isLive = true,
+        currentInningOrdinal = "8th",
+        inningHalf = "Top",
+        outs = 2,
+        runnerOnFirst = true,
+        runnerOnSecond = false,
+        runnerOnThird = true,
+        awayTeamId = 146,
+        homeTeamId = 117
+    )
+    TestAppTheme {
+        Box(modifier = Modifier.padding(16.dp)) {
+            LiveGameCard(game = mockGame, onClick = {})
+        }
+    }
+}
+
+@OptIn(androidx.compose.animation.ExperimentalSharedTransitionApi::class)
+@Composable
+fun LiveTeamRow(teamId: Int, name: String, score: Int) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        TeamLogo(teamId = teamId, modifier = Modifier.size(24.dp), padding = 0)
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = name,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = score.toString(),
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Black
+        )
+    }
+}
+
+@Composable
+fun DiamondView(first: Boolean, second: Boolean, third: Boolean) {
+    val activeColor = MaterialTheme.colorScheme.primary
+    val inactiveColor = Color.LightGray.copy(alpha = 0.5f)
+
+    Box(modifier = Modifier.size(40.dp)) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val diamondSize = 12.dp.toPx()
+
+            // Second Base (Top)
+            drawDiamond(
+                center = Offset(size.width / 2, diamondSize / 2),
+                size = diamondSize,
+                color = if (second) activeColor else inactiveColor
+            )
+
+            // Third Base (Left)
+            drawDiamond(
+                center = Offset(diamondSize / 2, size.height / 2),
+                size = diamondSize,
+                color = if (third) activeColor else inactiveColor
+            )
+
+            // First Base (Right)
+            drawDiamond(
+                center = Offset(size.width - (diamondSize / 2), size.height / 2),
+                size = diamondSize,
+                color = if (first) activeColor else inactiveColor
+            )
+        }
+    }
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawDiamond(
+    center: Offset, size: Float, color: Color
+) {
+    val path = Path().apply {
+        moveTo(center.x, center.y - size / 2) // Top
+        lineTo(center.x + size / 2, center.y) // Right
+        lineTo(center.x, center.y + size / 2) // Bottom
+        lineTo(center.x - size / 2, center.y) // Left
+        close()
+    }
+    drawPath(path = path, color = color)
 }
 
 @Composable
@@ -403,24 +562,31 @@ fun TeamScoreRow(teamName: String, score: Int?, isWinner: Boolean) {
 @Composable
 fun GameListPreview() {
     val mockGames = listOf(
-        Game(1, "New York Yankees", "Boston Red Sox", 5, 2, "Final", "2024-10-25T23:05:00Z"),
         Game(
-            2,
-            "Los Angeles Dodgers",
-            "San Francisco Giants",
-            3,
-            4,
-            "Final",
-            "2024-10-26T02:10:00Z"
-        ),
-        Game(
-            3,
-            "Chicago Cubs",
-            "St. Louis Cardinals",
-            null,
-            null,
-            "Preview",
-            "2024-10-26T18:20:00Z"
+            id = 1,
+            awayTeam = "Nicaragua",
+            homeTeam = "Netherlands",
+            awayScore = 3,
+            homeScore = 1,
+            status = "In Progress",
+            startTime = "2024-10-25T23:05:00Z",
+            isLive = true,
+            currentInningOrdinal = "8th",
+            inningHalf = "Top",
+            outs = 2,
+            runnerOnFirst = true,
+            runnerOnSecond = false,
+            runnerOnThird = true,
+            awayTeamId = 146,
+            homeTeamId = 117
+        ), Game(
+            id = 2,
+            awayTeam = "New York Yankees",
+            homeTeam = "Boston Red Sox",
+            awayScore = 5,
+            homeScore = 2,
+            status = "Final",
+            startTime = "2024-10-25T23:05:00Z"
         )
     )
     TestAppTheme {
@@ -429,7 +595,6 @@ fun GameListPreview() {
             games = mockGames,
             isLoading = false,
             onDateSelected = {},
-            onGameClick = {}
-        )
+            onGameClick = {})
     }
 }

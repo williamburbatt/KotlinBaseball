@@ -3,6 +3,7 @@ package com.example.testapp.ui.components
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -21,7 +22,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
@@ -128,6 +131,52 @@ fun PlayerHeadshot(
             }
         }
     }
+}
+
+@Composable
+fun DiamondView(first: Boolean, second: Boolean, third: Boolean, modifier: Modifier = Modifier) {
+    val activeColor = MaterialTheme.colorScheme.primary
+    val inactiveColor = Color.LightGray.copy(alpha = 0.5f)
+
+    Box(modifier = modifier.size(40.dp)) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val diamondSize = 12.dp.toPx()
+
+            // Second Base (Top)
+            drawDiamond(
+                center = Offset(size.width / 2, diamondSize / 2),
+                size = diamondSize,
+                color = if (second) activeColor else inactiveColor
+            )
+
+            // Third Base (Left)
+            drawDiamond(
+                center = Offset(diamondSize / 2, size.height / 2),
+                size = diamondSize,
+                color = if (third) activeColor else inactiveColor
+            )
+
+            // First Base (Right)
+            drawDiamond(
+                center = Offset(size.width - (diamondSize / 2), size.height / 2),
+                size = diamondSize,
+                color = if (first) activeColor else inactiveColor
+            )
+        }
+    }
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawDiamond(
+    center: Offset, size: Float, color: Color
+) {
+    val path = Path().apply {
+        moveTo(center.x, center.y - size / 2) // Top
+        lineTo(center.x + size / 2, center.y) // Right
+        lineTo(center.x, center.y + size / 2) // Bottom
+        lineTo(center.x - size / 2, center.y) // Left
+        close()
+    }
+    drawPath(path = path, color = color)
 }
 
 @Composable

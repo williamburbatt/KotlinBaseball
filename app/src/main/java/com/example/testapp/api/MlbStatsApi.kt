@@ -147,8 +147,20 @@ data class LinescoreResponse(
     val currentInningOrdinal: String? = null,
     val inningHalf: String? = null,
     val isTopInning: Boolean? = null,
-    val scheduledInnings: Int? = null
+    val scheduledInnings: Int? = null,
+    val outs: Int? = null,
+    val offense: Offense? = null
 )
+
+@Serializable
+data class Offense(
+    val first: Runner? = null,
+    val second: Runner? = null,
+    val third: Runner? = null
+)
+
+@Serializable
+data class Runner(val id: Int? = null, val fullName: String? = null)
 
 @Serializable
 data class Inning(

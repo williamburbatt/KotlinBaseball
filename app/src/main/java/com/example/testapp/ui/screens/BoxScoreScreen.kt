@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -14,7 +13,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -40,6 +38,7 @@ import com.example.testapp.api.Team
 import com.example.testapp.ui.viewmodels.BoxScoreViewModel
 import com.example.testapp.ui.components.TeamLogo
 import com.example.testapp.ui.components.PlayerHeadshot
+import com.example.testapp.ui.components.DiamondView
 import com.example.testapp.ui.theme.TestAppTheme
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
@@ -134,7 +133,7 @@ fun BoxScoreContent(
                                 fontWeight = FontWeight.Black,
                                 color = MaterialTheme.colorScheme.outline
                             )
-                            Row(modifier = Modifier.width(220.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Row(modifier = Modifier.width(260.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                                 StatHeaderCol("AB")
                                 StatHeaderCol("R")
                                 StatHeaderCol("H")
@@ -178,7 +177,7 @@ fun BoxScoreContent(
                                 fontWeight = FontWeight.Black,
                                 color = MaterialTheme.colorScheme.outline
                             )
-                            Row(modifier = Modifier.width(220.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Row(modifier = Modifier.width(260.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                                 StatHeaderCol("IP")
                                 StatHeaderCol("H")
                                 StatHeaderCol("ER")
@@ -222,13 +221,11 @@ fun ScoreboardHeader(awayTeam: BoxscoreTeam, homeTeam: BoxscoreTeam, linescore: 
         shape = RoundedCornerShape(16.dp)
     ) {
         Row(
-            modifier = Modifier
-                .padding(24.dp)
-                .fillMaxWidth(),
+            modifier = Modifier.padding(24.dp).fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Away
+            // Away Team
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
                 TeamLogo(teamId = awayTeam.team.id, modifier = Modifier.size(64.dp))
                 Text(
@@ -240,28 +237,63 @@ fun ScoreboardHeader(awayTeam: BoxscoreTeam, homeTeam: BoxscoreTeam, linescore: 
                 )
             }
 
-            // Score
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 16.dp)) {
-                Text(
-                    text = "${linescore?.teams?.away?.runs ?: 0}",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 42.sp,
-                    fontWeight = FontWeight.Black
-                )
-                Text(
-                    text = "vs",
-                    color = MaterialTheme.colorScheme.outline,
-                    modifier = Modifier.padding(horizontal = 12.dp)
-                )
-                Text(
-                    text = "${linescore?.teams?.home?.runs ?: 0}",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 42.sp,
-                    fontWeight = FontWeight.Black
-                )
+            // Middle Section (Scores + Live Info)
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.weight(1.2f)
+            ) {
+                // Scores row aligned with top of logos/text
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "${linescore?.teams?.away?.runs ?: 0}",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 42.sp,
+                        fontWeight = FontWeight.Black
+                    )
+                    Text(
+                        text = "vs",
+                        color = MaterialTheme.colorScheme.outline,
+                        modifier = Modifier.padding(horizontal = 12.dp)
+                    )
+                    Text(
+                        text = "${linescore?.teams?.home?.runs ?: 0}",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 42.sp,
+                        fontWeight = FontWeight.Black
+                    )
+                }
+
+                // Scorebug (Live Info) underneath
+                if (linescore != null && linescore.currentInning != null) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "${linescore.inningHalf} ${linescore.currentInningOrdinal}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Red
+                            )
+                            Text(
+                                text = "${linescore.outs} Outs",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        
+                        Spacer(modifier = Modifier.width(16.dp))
+                        
+                        DiamondView(
+                            first = linescore.offense?.first != null,
+                            second = linescore.offense?.second != null,
+                            third = linescore.offense?.third != null,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                }
             }
 
-            // Home
+            // Home Team
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
                 TeamLogo(teamId = homeTeam.team.id, modifier = Modifier.size(64.dp))
                 Text(
@@ -424,7 +456,7 @@ fun BoxscorePlayerRow(
                 Text(pos, color = MaterialTheme.colorScheme.outline, style = MaterialTheme.typography.labelSmall)
             }
         }
-        Row(modifier = Modifier.width(220.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+        Row(modifier = Modifier.width(260.dp), horizontalArrangement = Arrangement.SpaceBetween) {
             StatCol(ab.toString())
             StatCol(r.toString())
             StatCol(h.toString())
@@ -467,7 +499,7 @@ fun BoxscorePitcherRow(
                 overflow = TextOverflow.Ellipsis
             )
         }
-        Row(modifier = Modifier.width(220.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+        Row(modifier = Modifier.width(260.dp), horizontalArrangement = Arrangement.SpaceBetween) {
             StatCol(ip)
             StatCol(h.toString())
             StatCol(er.toString())
@@ -558,6 +590,14 @@ fun BoxScorePreview() {
         teams = LinescoreTeams(
             away = LinescoreTeam(3, 10, 0),
             home = LinescoreTeam(4, 9, 1)
+        ),
+        currentInning = 8,
+        currentInningOrdinal = "8th",
+        inningHalf = "Top",
+        outs = 2,
+        offense = com.example.testapp.api.Offense(
+            first = com.example.testapp.api.Runner(1),
+            third = com.example.testapp.api.Runner(2)
         )
     )
 
