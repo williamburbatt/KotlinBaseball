@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -12,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.testapp"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -60,23 +61,15 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     
-    // Retrofit & OkHttp & Moshi
+    // Retrofit & OkHttp & Serialization
     implementation(libs.retrofit.core)
-    implementation(libs.retrofit.moshi)
+    implementation(libs.retrofit.kotlinx.serialization)
     implementation(libs.okhttp.logging)
-    implementation(libs.moshi.kotlin)
-    ksp(libs.moshi.kotlin.codegen)
+    implementation(libs.kotlinx.serialization.json)
     
     // Coil (Image Loading)
     implementation(libs.coil.compose)
     implementation(libs.coil.svg)
-    
-    // Firebase (Commented out until setup)
-    /*
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.firestore)
-    implementation(libs.firebase.analytics)
-    */
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

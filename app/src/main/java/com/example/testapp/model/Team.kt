@@ -1,8 +1,8 @@
 package com.example.testapp.model
 
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class Team(
     val id: Int,
     val name: String,
