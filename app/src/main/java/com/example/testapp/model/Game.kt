@@ -31,9 +31,7 @@ data class BoxScore(
 
 @Serializable
 data class LineScore(
-    val runs: Int = 0,
-    val hits: Int = 0,
-    val errors: Int = 0
+    val runs: Int = 0, val hits: Int = 0, val errors: Int = 0
 )
 
 @Serializable
