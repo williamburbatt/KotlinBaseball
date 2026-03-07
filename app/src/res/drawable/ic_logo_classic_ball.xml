@@ -1,0 +1,26 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="100dp"
+    android:height="100dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+    <!-- Base of the ball -->
+    <path
+        android:fillColor="#F2F4FF"
+        android:pathData="M50,50m-40,0a40,40 0,1 1,80 0a40,40 0,1 1,-80 0" />
+    <!-- Outline -->
+    <path
+        android:strokeColor="#6C756B"
+        android:strokeWidth="2"
+        android:pathData="M50,50m-40,0a40,40 0,1 1,80 0a40,40 0,1 1,-80 0" />
+    <!-- Stitches using theme colors -->
+    <path
+        android:strokeColor="#93ACB5"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M25,25c10,10 10,40 0,50" />
+    <path
+        android:strokeColor="#93ACB5"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M75,25c-10,10 -10,40 0,50" />
+</vector>

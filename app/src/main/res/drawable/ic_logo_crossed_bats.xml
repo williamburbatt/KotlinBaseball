@@ -1,0 +1,23 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="100dp"
+    android:height="100dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+    <!-- Left Bat -->
+    <path
+        android:fillColor="#6C756B"
+        android:pathData="M20,80 L80,20 L85,25 L25,85 Z" />
+    <!-- Right Bat -->
+    <path
+        android:fillColor="#93ACB5"
+        android:pathData="M80,80 L20,20 L15,25 L75,85 Z" />
+    <!-- Ball in center -->
+    <path
+        android:fillColor="#F2F4FF"
+        android:pathData="M50,45m-8,0a8,8 0,1 1,16 0a8,8 0,1 1,-16 0" />
+    <!-- Ball Outline -->
+    <path
+        android:strokeColor="#6C756B"
+        android:strokeWidth="1"
+        android:pathData="M50,45m-8,0a8,8 0,1 1,16 0a8,8 0,1 1,-16 0" />
+</vector>

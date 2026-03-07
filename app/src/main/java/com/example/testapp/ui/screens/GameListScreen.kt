@@ -37,7 +37,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,6 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.testapp.model.Game
 import com.example.testapp.ui.viewmodels.GameViewModel
 import java.time.Instant
@@ -64,9 +64,9 @@ fun GameListScreen(
     onGameClick: (Game) -> Unit,
     viewModel: GameViewModel = hiltViewModel()
 ) {
-    val selectedDate by viewModel.selectedDate.collectAsState()
-    val games by viewModel.games.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
+    val selectedDate by viewModel.selectedDate.collectAsStateWithLifecycle()
+    val games by viewModel.games.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     var showDatePicker by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -136,7 +136,11 @@ fun GameListScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 12.dp)
                 ) {
-                    items(games) { game ->
+                    // Added key = { it.id } to optimize performance
+                    items(
+                        items = games,
+                        key = { game -> game.id }
+                    ) { game ->
                         GameScoreCard(game = game, onClick = { onGameClick(game) })
                     }
                 }
@@ -178,7 +182,10 @@ fun DateScroller(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp)
     ) {
-        items(dates) { date ->
+        items(
+            items = dates,
+            key = { date -> date.toString() }
+        ) { date ->
             val isSelected = date == selectedDate
             DateItem(
                 date = date,
@@ -226,7 +233,7 @@ fun M3DatePickerDialog(
         initialSelectedDateMillis = initialDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
     )
 
-    androidx.compose.material3.DatePickerDialog(
+    DatePickerDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
             TextButton(onClick = {

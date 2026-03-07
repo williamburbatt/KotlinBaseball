@@ -1,0 +1,42 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+
+    <!-- The Bat -->
+    <path
+        android:fillColor="#6C756B"
+        android:pathData="M15,85 L25,95 L85,35 C88,29 82,22 76,25 L15,85 Z" />
+
+    <!-- Bat Highlight for depth -->
+    <path
+        android:fillColor="#93ACB5"
+        android:pathData="M76,25 L85,35 L80,40 L71,30 Z" />
+
+    <!-- The Baseball -->
+    <path
+        android:fillColor="#F2F4FF"
+        android:pathData="M65,75 A20,20 0 1,1 65.01,75 Z" />
+
+    <!-- Baseball Border -->
+    <path
+        android:strokeColor="#6C756B"
+        android:strokeWidth="1.5"
+        android:pathData="M65,75 A20,20 0 1,1 65.01,75 Z" />
+
+    <!-- Red Stitches (Left) -->
+    <path
+        android:strokeColor="#FF5252"
+        android:strokeWidth="1.2"
+        android:strokeLineCap="round"
+        android:pathData="M52,65 C55,75 65,85 75,82" />
+
+    <!-- Red Stitches (Right) -->
+    <path
+        android:strokeColor="#FF5252"
+        android:strokeWidth="1.2"
+        android:strokeLineCap="round"
+        android:pathData="M55,58 C65,60 75,70 78,80" />
+
+</vector>

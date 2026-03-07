@@ -1,0 +1,16 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="100dp"
+    android:height="100dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+    <!-- Home Plate Shape (Ghost White) -->
+    <path
+        android:fillColor="#F2F4FF"
+        android:strokeColor="#6C756B"
+        android:strokeWidth="2"
+        android:pathData="M20,20 L80,20 L80,60 L50,90 L20,60 Z" />
+    <!-- Inner Ball (Cool Steel) -->
+    <path
+        android:fillColor="#93ACB5"
+        android:pathData="M50,45m-15,0a15,15 0,1 1,30 0a15,15 0,1 1,-30 0" />
+</vector>

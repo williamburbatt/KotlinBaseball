@@ -36,6 +36,10 @@ android {
     }
     kotlinOptions {
         jvmTarget = "11"
+        freeCompilerArgs += listOf(
+            "-P",
+            "plugin:androidx.compose.compiler.plugins.kotlin:strongSkipping=true"
+        )
     }
     buildFeatures {
         compose = true

@@ -10,6 +10,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.testapp.ui.navigation.Screen
 import com.example.testapp.ui.screens.BoxScoreScreen
 import com.example.testapp.ui.screens.GameListScreen
+import com.example.testapp.ui.screens.LogoGalleryScreen
 import com.example.testapp.ui.screens.MainHubScreen
 import com.example.testapp.ui.screens.PlayerListScreen
 import com.example.testapp.ui.screens.SportSelectionScreen
@@ -29,7 +30,8 @@ class MainActivity : ComponentActivity() {
                     composable<Screen.MainHub> {
                         MainHubScreen(
                             onTeamsClick = { navController.navigate(Screen.SportSelection) },
-                            onGamesClick = { navController.navigate(Screen.GameList) }
+                            onGamesClick = { navController.navigate(Screen.GameList) },
+                            onLogosClick = { navController.navigate(Screen.LogoGallery) }
                         )
                     }
                     composable<Screen.SportSelection> {
@@ -58,6 +60,9 @@ class MainActivity : ComponentActivity() {
                     }
                     composable<Screen.BoxScore> {
                         BoxScoreScreen(onBack = { navController.popBackStack() })
+                    }
+                    composable<Screen.LogoGallery> {
+                        LogoGalleryScreen(onBack = { navController.popBackStack() })
                     }
                 }
             }

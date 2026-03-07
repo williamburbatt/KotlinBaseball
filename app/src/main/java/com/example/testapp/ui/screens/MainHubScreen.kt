@@ -1,5 +1,6 @@
 package com.example.testapp.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -25,21 +27,36 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.testapp.R
 
 @Composable
-fun MainHubScreen(onTeamsClick: () -> Unit, onGamesClick: () -> Unit) {
+fun MainHubScreen(
+    onTeamsClick: () -> Unit,
+    onGamesClick: () -> Unit,
+    onLogosClick: () -> Unit
+) {
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
                 .padding(24.dp),
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_logo_classic_ball),
+                contentDescription = "App Logo",
+                modifier = Modifier
+                    .size(120.dp)
+                    .padding(bottom = 16.dp)
+            )
+
             Text(
-                text = "Baseball Central",
+                text = "Kotlin Baseball",
                 style = MaterialTheme.typography.displayMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 32.dp)
@@ -59,6 +76,15 @@ fun MainHubScreen(onTeamsClick: () -> Unit, onGamesClick: () -> Unit) {
                 description = "Browse teams and player stats",
                 icon = Icons.Default.List,
                 onClick = onTeamsClick
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            HubCard(
+                title = "Logo Gallery",
+                description = "View custom baseball branding",
+                icon = Icons.Default.Face,
+                onClick = onLogosClick
             )
         }
     }

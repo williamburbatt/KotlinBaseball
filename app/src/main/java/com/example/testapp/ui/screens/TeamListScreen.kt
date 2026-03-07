@@ -18,13 +18,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.testapp.model.Team
 import com.example.testapp.ui.components.TeamLogo
 import com.example.testapp.ui.viewmodels.TeamViewModel
@@ -34,11 +34,15 @@ fun TeamListScreen(
     onTeamClick: (Int) -> Unit,
     viewModel: TeamViewModel = hiltViewModel()
 ) {
-    val teams by viewModel.teams.collectAsState()
+    val teams by viewModel.teams.collectAsStateWithLifecycle()
 
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
         LazyColumn(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
-            items(teams) { team ->
+            // Added key = { it.id } to optimize performance
+            items(
+                items = teams,
+                key = { team -> team.id }
+            ) { team ->
                 TeamCard(team = team, onClick = { onTeamClick(team.id) })
             }
         }

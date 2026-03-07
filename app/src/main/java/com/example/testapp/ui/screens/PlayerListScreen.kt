@@ -28,7 +28,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.testapp.model.Player
 import com.example.testapp.ui.components.PositionBadge
 import com.example.testapp.ui.components.SectionHeader
@@ -51,9 +51,9 @@ import java.util.Locale
 fun PlayerListScreen(
     viewModel: PlayerViewModel = hiltViewModel()
 ) {
-    val groupedPlayers by viewModel.groupedPlayers.collectAsState()
-    val selectedYear by viewModel.selectedYear.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
+    val groupedPlayers by viewModel.groupedPlayers.collectAsStateWithLifecycle()
+    val selectedYear by viewModel.selectedYear.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     var showYearDropdown by remember { mutableStateOf(false) }
     
     val teamId = viewModel.teamId
@@ -109,10 +109,14 @@ fun PlayerListScreen(
             } else {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                     groupedPlayers.forEach { group ->
-                        item {
+                        item(key = "header_${group.title}") {
                             SectionHeader(title = group.title)
                         }
-                        items(group.players) { player ->
+                        // Added key = { it.id } here
+                        items(
+                            items = group.players,
+                            key = { player -> player.id }
+                        ) { player ->
                             PlayerCard(player = player)
                         }
                         item { Spacer(modifier = Modifier.height(16.dp)) }
