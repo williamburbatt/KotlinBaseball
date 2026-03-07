@@ -176,9 +176,26 @@ data class BoxscoreGameStatus(val isCurrentBatter: Boolean? = false, val isCurre
 @Serializable
 data class BoxscorePlayerStats(val batting: BattingStats? = null, val pitching: PitchingStats? = null)
 @Serializable
-data class BattingStats(val atBats: Int? = null, val runs: Int? = null, val hits: Int? = null, val rbi: Int? = null, val homeRuns: Int? = null, val leftOnBase: Int? = null)
+data class BattingStats(
+    val atBats: Int? = null, 
+    val runs: Int? = null, 
+    val hits: Int? = null, 
+    val rbi: Int? = null, 
+    val homeRuns: Int? = null, 
+    val leftOnBase: Int? = null,
+    val stolenBases: Int? = null
+)
 @Serializable
-data class PitchingStats(val inningsPitched: String? = null, val hits: Int? = null, val runs: Int? = null, val earnedRuns: Int? = null, val strikeOuts: Int? = null, val baseOnBalls: Int? = null)
+data class PitchingStats(
+    val inningsPitched: String? = null, 
+    val hits: Int? = null, 
+    val runs: Int? = null, 
+    val earnedRuns: Int? = null, 
+    val strikeOuts: Int? = null, 
+    val baseOnBalls: Int? = null,
+    val era: String? = null,
+    val whip: String? = null
+)
 
 @Singleton
 class MlbStatsApi @Inject constructor(

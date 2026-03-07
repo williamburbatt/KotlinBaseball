@@ -2,6 +2,7 @@ package com.example.testapp.ui.screens
 
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -45,13 +46,15 @@ import com.example.testapp.ui.theme.TestAppTheme
 @Composable
 fun BoxScoreScreen(
     onBack: () -> Unit,
+    onPlayerClick: (Int) -> Unit,
     viewModel: BoxScoreViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     
     BoxScoreContent(
         uiState = uiState,
-        onBack = onBack
+        onBack = onBack,
+        onPlayerClick = onPlayerClick
     )
 }
 
@@ -59,7 +62,8 @@ fun BoxScoreScreen(
 @Composable
 fun BoxScoreContent(
     uiState: com.example.testapp.ui.viewmodels.BoxScoreUiState,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onPlayerClick: (Int) -> Unit = {}
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
 
@@ -117,13 +121,28 @@ fun BoxScoreContent(
                     val team = if (selectedTab == 0) boxscore.teams.away else boxscore.teams.home
                     
                     item {
-                        Text(
-                            "BATTING",
-                            modifier = Modifier.padding(16.dp),
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.outline
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "BATTING",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Black,
+                                color = MaterialTheme.colorScheme.outline
+                            )
+                            Row(modifier = Modifier.width(220.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                                StatHeaderCol("AB")
+                                StatHeaderCol("R")
+                                StatHeaderCol("H")
+                                StatHeaderCol("RBI")
+                                StatHeaderCol("HR")
+                                StatHeaderCol("SB")
+                            }
+                        }
                     }
 
                     val batters = team.players.values
@@ -138,18 +157,36 @@ fun BoxScoreContent(
                             r = player.stats.batting?.runs ?: 0,
                             h = player.stats.batting?.hits ?: 0,
                             rbi = player.stats.batting?.rbi ?: 0,
-                            playerId = player.person.id
+                            hr = player.stats.batting?.homeRuns ?: 0,
+                            sb = player.stats.batting?.stolenBases ?: 0,
+                            playerId = player.person.id,
+                            onClick = { onPlayerClick(player.person.id) }
                         )
                     }
 
                     item {
-                        Text(
-                            "PITCHING",
-                            modifier = Modifier.padding(16.dp),
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.outline
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "PITCHING",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Black,
+                                color = MaterialTheme.colorScheme.outline
+                            )
+                            Row(modifier = Modifier.width(220.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                                StatHeaderCol("IP")
+                                StatHeaderCol("H")
+                                StatHeaderCol("ER")
+                                StatHeaderCol("K")
+                                StatHeaderCol("ERA")
+                                StatHeaderCol("WHIP")
+                            }
+                        }
                     }
 
                     val pitchers = team.players.values
@@ -162,7 +199,10 @@ fun BoxScoreContent(
                             h = player.stats.pitching?.hits ?: 0,
                             er = player.stats.pitching?.earnedRuns ?: 0,
                             k = player.stats.pitching?.strikeOuts ?: 0,
-                            playerId = player.person.id
+                            era = player.stats.pitching?.era ?: "-.--",
+                            whip = player.stats.pitching?.whip ?: "-.--",
+                            playerId = player.person.id,
+                            onClick = { onPlayerClick(player.person.id) }
                         )
                     }
                 }
@@ -350,10 +390,22 @@ fun TeamStatsTabs(selectedTab: Int, onTabSelected: (Int) -> Unit, awayName: Stri
 }
 
 @Composable
-fun BoxscorePlayerRow(name: String, pos: String, ab: Int, r: Int, h: Int, rbi: Int, playerId: Int) {
+fun BoxscorePlayerRow(
+    name: String, 
+    pos: String, 
+    ab: Int, 
+    r: Int, 
+    h: Int, 
+    rbi: Int, 
+    hr: Int, 
+    sb: Int, 
+    playerId: Int,
+    onClick: () -> Unit = {}
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -362,25 +414,44 @@ fun BoxscorePlayerRow(name: String, pos: String, ab: Int, r: Int, h: Int, rbi: I
             PlayerHeadshot(playerId = playerId.toString(), modifier = Modifier.size(40.dp))
             Spacer(modifier = Modifier.width(12.dp))
             Column {
-                Text(name, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(
+                    text = name, 
+                    color = MaterialTheme.colorScheme.onBackground, 
+                    fontWeight = FontWeight.Bold, 
+                    maxLines = 2, 
+                    overflow = TextOverflow.Ellipsis
+                )
                 Text(pos, color = MaterialTheme.colorScheme.outline, style = MaterialTheme.typography.labelSmall)
             }
         }
-        Row(modifier = Modifier.width(160.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-            StatCol("AB", ab.toString())
-            StatCol("R", r.toString())
-            StatCol("H", h.toString())
-            StatCol("RBI", rbi.toString())
+        Row(modifier = Modifier.width(220.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+            StatCol(ab.toString())
+            StatCol(r.toString())
+            StatCol(h.toString())
+            StatCol(rbi.toString())
+            StatCol(hr.toString())
+            StatCol(sb.toString())
         }
     }
     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
 }
 
 @Composable
-fun BoxscorePitcherRow(name: String, ip: String, h: Int, er: Int, k: Int, playerId: Int) {
+fun BoxscorePitcherRow(
+    name: String, 
+    ip: String, 
+    h: Int, 
+    er: Int, 
+    k: Int, 
+    era: String, 
+    whip: String, 
+    playerId: Int,
+    onClick: () -> Unit = {}
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -388,20 +459,35 @@ fun BoxscorePitcherRow(name: String, ip: String, h: Int, er: Int, k: Int, player
         Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
             PlayerHeadshot(playerId = playerId.toString(), modifier = Modifier.size(40.dp))
             Spacer(modifier = Modifier.width(12.dp))
-            Text(name, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(
+                text = name, 
+                color = MaterialTheme.colorScheme.onBackground, 
+                fontWeight = FontWeight.Bold, 
+                maxLines = 2, 
+                overflow = TextOverflow.Ellipsis
+            )
         }
-        Row(modifier = Modifier.width(160.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-            StatCol("IP", ip)
-            StatCol("H", h.toString())
-            StatCol("ER", er.toString())
-            StatCol("K", k.toString())
+        Row(modifier = Modifier.width(220.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+            StatCol(ip)
+            StatCol(h.toString())
+            StatCol(er.toString())
+            StatCol(k.toString())
+            StatCol(era)
+            StatCol(whip)
         }
     }
     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
 }
 
 @Composable
-fun StatCol(label: String, value: String) {
+fun StatHeaderCol(label: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(35.dp)) {
+        Text(label, color = MaterialTheme.colorScheme.outline, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+    }
+}
+
+@Composable
+fun StatCol(value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(35.dp)) {
         Text(value, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold, fontSize = 14.sp)
     }
@@ -425,8 +511,13 @@ fun BoxScorePreview() {
                 players = mapOf(
                     "p1" to BoxscorePlayer(
                         person = Person(672333, "Luis Arraez"),
-                        stats = BoxscorePlayerStats(batting = com.example.testapp.api.BattingStats(4, 1, 2, 1)),
+                        stats = BoxscorePlayerStats(batting = com.example.testapp.api.BattingStats(4, 1, 2, 1, 1, 0, 1)),
                         position = Position("2B", "Second Base", "Infielder", "4")
+                    ),
+                    "p_marlins_pitcher" to BoxscorePlayer(
+                        person = Person(664353, "Sandy Alcantara"),
+                        stats = BoxscorePlayerStats(pitching = com.example.testapp.api.PitchingStats("7.0", 5, 1, 1, 10, 1, "2.25", "1.05")),
+                        position = Position("SP", "Starting Pitcher", "Pitcher", "1")
                     )
                 )
             ),
@@ -440,8 +531,13 @@ fun BoxScorePreview() {
                 players = mapOf(
                     "p2" to BoxscorePlayer(
                         person = Person(514888, "Jose Altuve"),
-                        stats = BoxscorePlayerStats(batting = com.example.testapp.api.BattingStats(4, 1, 1, 0)),
+                        stats = BoxscorePlayerStats(batting = com.example.testapp.api.BattingStats(4, 1, 1, 0, 0, 0, 0)),
                         position = Position("2B", "Second Base", "Infielder", "4")
+                    ),
+                    "p3" to BoxscorePlayer(
+                        person = Person(593160, "Gerrit Cole"),
+                        stats = BoxscorePlayerStats(pitching = com.example.testapp.api.PitchingStats("6.0", 4, 2, 2, 8, 1, "3.10", "1.12")),
+                        position = Position("SP", "Starting Pitcher", "Pitcher", "1")
                     )
                 )
             )

@@ -19,30 +19,40 @@ data class GameData(
 class GameRepository @Inject constructor(
     private val api: MlbStatsApi
 ) {
-    fun getGamesForDate(date: String): Flow<List<Game>> = flow {
-        try {
-            val response = api.getSchedule(date = date)
-            val games = response.dates.flatMap { dateEntry ->
-                dateEntry.games.map { apiGame ->
-                    Game(
-                        id = apiGame.gamePk,
-                        awayTeam = apiGame.teams.away.team.name ?: "",
-                        homeTeam = apiGame.teams.home.team.name ?: "",
-                        awayScore = apiGame.teams.away.score,
-                        homeScore = apiGame.teams.home.score,
-                        status = apiGame.status.detailedState,
-                        startTime = apiGame.gameDate,
-                        awayHits = apiGame.linescore?.teams?.away?.hits,
-                        homeHits = apiGame.linescore?.teams?.home?.hits,
-                        awayErrors = apiGame.linescore?.teams?.away?.errors,
-                        homeErrors = apiGame.linescore?.teams?.home?.errors
-                    )
+    fun getGamesForDate(date: String, autoRefresh: Boolean = false): Flow<List<Game>> = flow {
+        while (true) {
+            try {
+                val response = api.getSchedule(date = date)
+                val games = response.dates.flatMap { dateEntry ->
+                    dateEntry.games.map { apiGame ->
+                        Game(
+                            id = apiGame.gamePk,
+                            awayTeam = apiGame.teams.away.team.name ?: "",
+                            homeTeam = apiGame.teams.home.team.name ?: "",
+                            awayScore = apiGame.teams.away.score,
+                            homeScore = apiGame.teams.home.score,
+                            status = apiGame.status.detailedState,
+                            startTime = apiGame.gameDate,
+                            awayHits = apiGame.linescore?.teams?.away?.hits,
+                            homeHits = apiGame.linescore?.teams?.home?.hits,
+                            awayErrors = apiGame.linescore?.teams?.away?.errors,
+                            homeErrors = apiGame.linescore?.teams?.home?.errors
+                        )
+                    }
+                }
+                emit(games)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                if (!autoRefresh) {
+                    emit(emptyList())
                 }
             }
-            emit(games)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            emit(emptyList())
+            
+            if (autoRefresh) {
+                delay(5000)
+            } else {
+                break
+            }
         }
     }
 

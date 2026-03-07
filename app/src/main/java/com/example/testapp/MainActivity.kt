@@ -52,7 +52,7 @@ class MainActivity : ComponentActivity() {
             TestAppTheme {
                 val navController = rememberNavController()
                 
-                // Shared PlayerViewModel to handle direct detail viewing
+                // Shared PlayerViewModel to handle direct detail viewing across screens
                 val globalPlayerViewModel: PlayerViewModel = hiltViewModel()
                 val selectedPlayer by globalPlayerViewModel.selectedPlayer.collectAsStateWithLifecycle()
                 val isPlayerLoading by globalPlayerViewModel.isLoading.collectAsStateWithLifecycle()
@@ -114,7 +114,12 @@ class MainActivity : ComponentActivity() {
                                 })
                             }
                             composable<Screen.BoxScore> {
-                                BoxScoreScreen(onBack = { navController.popBackStack() })
+                                BoxScoreScreen(
+                                    onBack = { navController.popBackStack() },
+                                    onPlayerClick = { playerId ->
+                                        globalPlayerViewModel.selectPlayer(playerId)
+                                    }
+                                )
                             }
                         }
                     }

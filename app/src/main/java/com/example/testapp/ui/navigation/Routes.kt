@@ -28,7 +28,4 @@ sealed interface Screen {
 
     @Serializable
     data object PlayerSearch : Screen
-
-    @Serializable
-    data class PlayerDetail(val playerId: Int) : Screen
 }

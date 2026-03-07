@@ -3,9 +3,9 @@ package com.example.testapp.ui.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.testapp.model.Game
-import com.example.testapp.model.BoxScore
 import com.example.testapp.repository.GameRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,6 +28,8 @@ class GameViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    private var refreshJob: Job? = null
+
     init {
         loadGamesForSelectedDate()
     }
@@ -38,10 +40,12 @@ class GameViewModel @Inject constructor(
     }
 
     private fun loadGamesForSelectedDate() {
-        viewModelScope.launch {
+        refreshJob?.cancel()
+        refreshJob = viewModelScope.launch {
             _isLoading.value = true
             val dateString = _selectedDate.value.format(DateTimeFormatter.ISO_LOCAL_DATE)
-            repository.getGamesForDate(dateString).collect {
+            // autoRefresh = true will cause the flow to emit updated data every 5 seconds
+            repository.getGamesForDate(dateString, autoRefresh = true).collect {
                 _games.value = it
                 _isLoading.value = false
             }

@@ -73,8 +73,8 @@ fun MainHubScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 HubCard(
-                    title = "Daily Games",
-                    description = "Check daily games and box scores",
+                    title = "Live Games",
+                    description = "Check real-time scores and box scores",
                     icon = Icons.Default.DateRange,
                     onClick = onGamesClick
                 )

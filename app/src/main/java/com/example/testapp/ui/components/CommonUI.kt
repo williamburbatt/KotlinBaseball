@@ -3,6 +3,7 @@ package com.example.testapp.ui.components
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,11 +24,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.testapp.R
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -61,15 +65,24 @@ fun TeamLogo(
             modifier = Modifier.padding(padding.dp),
             contentAlignment = Alignment.Center
         ) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(logoUrl)
-                    .crossfade(true)
-                    .build(),
-                contentDescription = "Team Logo",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Fit
-            )
+            if (LocalInspectionMode.current) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_logo_classic_ball),
+                    contentDescription = "Team Logo Placeholder",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Fit
+                )
+            } else {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(logoUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "Team Logo",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Fit
+                )
+            }
         }
     }
 }
@@ -91,17 +104,28 @@ fun PlayerHeadshot(
             modifier = Modifier.padding(4.dp), // Less padding than logo
             contentAlignment = Alignment.Center
         ) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(headshotUrl)
-                    .crossfade(true)
-                    .build(),
-                contentDescription = "Player Headshot",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(CircleShape),
-                contentScale = ContentScale.Crop
-            )
+            if (LocalInspectionMode.current) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_logo_classic_ball),
+                    contentDescription = "Player Headshot Placeholder",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(headshotUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "Player Headshot",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            }
         }
     }
 }

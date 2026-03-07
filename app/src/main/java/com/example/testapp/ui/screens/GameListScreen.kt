@@ -102,12 +102,15 @@ fun GameListContent(
                     ) {
                         Column {
                             Text(
-                                text = selectedDate.month.getDisplayName(TextStyle.FULL, Locale.getDefault()),
+                                text = selectedDate.month.getDisplayName(
+                                    TextStyle.FULL,
+                                    Locale.getDefault()
+                                ),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                text = "Daily Games",
+                                text = "Live Games",
                                 style = MaterialTheme.typography.headlineMedium,
                                 fontWeight = FontWeight.ExtraBold
                             )
@@ -126,13 +129,15 @@ fun GameListContent(
                         selectedDate = selectedDate,
                         onDateSelected = onDateSelected
                     )
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
                 }
             }
         }
     ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
+        Box(modifier = Modifier
+            .padding(innerPadding)
+            .fillMaxSize()) {
             if (isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else if (games.isEmpty()) {
@@ -169,7 +174,7 @@ fun GameListContent(
         if (showDatePicker) {
             M3DatePickerDialog(
                 initialDate = selectedDate,
-                onDateSelected = { 
+                onDateSelected = {
                     it?.let { onDateSelected(it) }
                     showDatePicker = false
                 },
@@ -249,7 +254,8 @@ fun M3DatePickerDialog(
     onDismiss: () -> Unit
 ) {
     val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = initialDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        initialSelectedDateMillis = initialDate.atStartOfDay(ZoneId.systemDefault()).toInstant()
+            .toEpochMilli()
     )
 
     DatePickerDialog(
@@ -281,6 +287,16 @@ fun M3DatePickerDialog(
 
 @Composable
 fun GameScoreCard(game: Game, onClick: () -> Unit) {
+    val formattedStartTime = remember(game.startTime) {
+        try {
+            val instant = Instant.parse(game.startTime)
+            val zonedDateTime = instant.atZone(ZoneId.systemDefault())
+            zonedDateTime.format(DateTimeFormatter.ofPattern("h:mm a"))
+        } catch (ignored: Exception) {
+            game.startTime ?: ""
+        }
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -311,11 +327,11 @@ fun GameScoreCard(game: Game, onClick: () -> Unit) {
                             color = if (game.status == "Final") Color.DarkGray else MaterialTheme.colorScheme.primary
                         )
                     }
-                    
-                    if (game.status != "Final" && game.startTime != null) {
+
+                    if (game.status != "Final" && formattedStartTime.isNotEmpty()) {
                         Spacer(Modifier.width(8.dp))
                         Text(
-                            text = game.startTime,
+                            text = formattedStartTime,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.outline,
                             fontWeight = FontWeight.Medium
@@ -330,18 +346,18 @@ fun GameScoreCard(game: Game, onClick: () -> Unit) {
                     fontWeight = FontWeight.Bold
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             TeamScoreRow(
-                teamName = game.awayTeam, 
-                score = game.awayScore, 
+                teamName = game.awayTeam,
+                score = game.awayScore,
                 isWinner = (game.awayScore ?: 0) > (game.homeScore ?: 0) && game.status == "Final"
             )
             Spacer(modifier = Modifier.height(12.dp))
             TeamScoreRow(
-                teamName = game.homeTeam, 
-                score = game.homeScore, 
+                teamName = game.homeTeam,
+                score = game.homeScore,
                 isWinner = (game.homeScore ?: 0) > (game.awayScore ?: 0) && game.status == "Final"
             )
         }
@@ -369,7 +385,9 @@ fun TeamScoreRow(teamName: String, score: Int?, isWinner: Boolean) {
                 text = teamName,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = if (isWinner) FontWeight.ExtraBold else FontWeight.Medium,
-                color = if (isWinner) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                color = if (isWinner) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(
+                    alpha = 0.7f
+                )
             )
         }
         Text(
@@ -385,9 +403,25 @@ fun TeamScoreRow(teamName: String, score: Int?, isWinner: Boolean) {
 @Composable
 fun GameListPreview() {
     val mockGames = listOf(
-        Game(1, "New York Yankees", "Boston Red Sox", 5, 2, "Final", "7:05 PM"),
-        Game(2, "Los Angeles Dodgers", "San Francisco Giants", 3, 4, "Final", "10:10 PM"),
-        Game(3, "Chicago Cubs", "St. Louis Cardinals", null, null, "Preview", "2:20 PM")
+        Game(1, "New York Yankees", "Boston Red Sox", 5, 2, "Final", "2024-10-25T23:05:00Z"),
+        Game(
+            2,
+            "Los Angeles Dodgers",
+            "San Francisco Giants",
+            3,
+            4,
+            "Final",
+            "2024-10-26T02:10:00Z"
+        ),
+        Game(
+            3,
+            "Chicago Cubs",
+            "St. Louis Cardinals",
+            null,
+            null,
+            "Preview",
+            "2024-10-26T18:20:00Z"
+        )
     )
     TestAppTheme {
         GameListContent(
