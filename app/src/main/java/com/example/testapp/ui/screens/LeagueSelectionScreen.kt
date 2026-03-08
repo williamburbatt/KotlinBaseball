@@ -70,7 +70,7 @@ fun SportSelectionScreen(onSportClick: (Int) -> Unit) {
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            SportCard(
+            LeagueCard(
                 name = "Major League",
                 description = "MLB - The Big Leagues",
                 iconRes = R.drawable.ic_logo_stadium,
@@ -78,7 +78,7 @@ fun SportSelectionScreen(onSportClick: (Int) -> Unit) {
                 onClick = { onSportClick(1) }
             )
             
-            SportCard(
+            LeagueCard(
                 name = "Triple-A",
                 description = "International & Pacific Coast Leagues",
                 iconRes = R.drawable.ic_logo_diamond,
@@ -86,7 +86,7 @@ fun SportSelectionScreen(onSportClick: (Int) -> Unit) {
                 onClick = { onSportClick(11) }
             )
             
-            SportCard(
+            LeagueCard(
                 name = "Double-A",
                 description = "Eastern, Southern & Texas Leagues",
                 iconRes = R.drawable.ic_logo_diamond,
@@ -94,7 +94,7 @@ fun SportSelectionScreen(onSportClick: (Int) -> Unit) {
                 onClick = { onSportClick(12) }
             )
             
-            SportCard(
+            LeagueCard(
                 name = "High-A",
                 description = "South Atlantic, Midwest & NW Leagues",
                 iconRes = R.drawable.ic_logo_diamond,
@@ -102,7 +102,7 @@ fun SportSelectionScreen(onSportClick: (Int) -> Unit) {
                 onClick = { onSportClick(13) }
             )
             
-            SportCard(
+            LeagueCard(
                 name = "Single-A",
                 description = "California, Carolina & Florida State Leagues",
                 iconRes = R.drawable.ic_logo_diamond,
@@ -114,7 +114,7 @@ fun SportSelectionScreen(onSportClick: (Int) -> Unit) {
 }
 
 @Composable
-fun SportCard(
+fun LeagueCard(
     name: String, 
     description: String, 
     iconRes: Int,
