@@ -709,13 +709,13 @@ fun BoxScorePreview() {
 
     val mockPlays = listOf(
         com.example.testapp.api.Play(
-            result = com.example.testapp.api.PlayResult("Luis Arraez flies out to right fielder Kyle Tucker.", "Flyout"),
-            about = com.example.testapp.api.PlayAbout(8, "Top"),
+            result = com.example.testapp.api.PlayResult("Luis Arraez flies out to right fielder Kyle Tucker.", "Flyout", "Test"),
+            about = com.example.testapp.api.PlayAbout(8, true),
             count = com.example.testapp.api.PlayCount(0, 0, 1)
         ),
         com.example.testapp.api.Play(
-            result = com.example.testapp.api.PlayResult("Josh Bell doubles (20) on a line drive to center fielder Chas McCormick. Luis Arraez scores.", "Double"),
-            about = com.example.testapp.api.PlayAbout(8, "Top"),
+            result = com.example.testapp.api.PlayResult("Josh Bell doubles (20) on a line drive to center fielder Chas McCormick. Luis Arraez scores.", "Double", "test"),
+            about = com.example.testapp.api.PlayAbout(8, true),
             count = com.example.testapp.api.PlayCount(1, 1, 2)
         )
     )

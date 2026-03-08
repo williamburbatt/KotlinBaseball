@@ -28,4 +28,8 @@ sealed interface Screen {
 
     @Serializable
     data object PlayerSearch : Screen
+
+    @Serializable
+    data object Leaders : Screen
+
 }

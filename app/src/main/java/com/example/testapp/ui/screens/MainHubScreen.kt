@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -38,7 +39,8 @@ import com.example.testapp.ui.theme.TestAppTheme
 fun MainHubScreen(
     onGamesClick: () -> Unit,
     onTeamsClick: () -> Unit,
-    onSearchClick: () -> Unit
+    onSearchClick: () -> Unit,
+    onLeadersClick: () -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -92,6 +94,12 @@ fun MainHubScreen(
                     icon = Icons.Default.Search,
                     onClick = onSearchClick
                 )
+                HubCard(
+                    title = "Stat Leaders",
+                    description = "View the best of the best",
+                    icon = Icons.Default.Star,
+                    onClick = onLeadersClick
+                )
             }
         }
     }
@@ -144,6 +152,6 @@ fun HubCard(title: String, description: String, icon: ImageVector, onClick: () -
 @Composable
 fun MainHubPreview() {
     TestAppTheme {
-        MainHubScreen(onGamesClick = {}, onTeamsClick = {}, onSearchClick = {})
+        MainHubScreen(onGamesClick = {}, onTeamsClick = {}, onSearchClick = {}, onLeadersClick = {})
     }
 }

@@ -34,6 +34,7 @@ import com.example.testapp.ui.navigation.Screen
 import com.example.testapp.ui.screens.BoxScoreScreen
 import com.example.testapp.ui.screens.DetailedPlayerCard
 import com.example.testapp.ui.screens.GameListScreen
+import com.example.testapp.ui.screens.LeadersScreen
 import com.example.testapp.ui.screens.MainHubScreen
 import com.example.testapp.ui.screens.PlayerListScreen
 import com.example.testapp.ui.screens.PlayerSearchScreen
@@ -77,7 +78,8 @@ class MainActivity : ComponentActivity() {
                                 MainHubScreen(
                                     onTeamsClick = { navController.navigate(Screen.SportSelection) },
                                     onGamesClick = { navController.navigate(Screen.GameList) },
-                                    onSearchClick = { navController.navigate(Screen.PlayerSearch) }
+                                    onSearchClick = { navController.navigate(Screen.PlayerSearch) },
+                                    onLeadersClick = {navController.navigate(Screen.Leaders)}
                                 )
                             }
                             composable<Screen.PlayerSearch> {
@@ -100,6 +102,14 @@ class MainActivity : ComponentActivity() {
                                     },
                                     sharedTransitionScope = this@SharedTransitionLayout,
                                     animatedVisibilityScope = this@composable
+                                )
+                            }
+                            composable<Screen.Leaders> {
+                                LeadersScreen(
+                                    onBack = { navController.popBackStack() },
+                                    onPlayerClick = { playerId ->
+                                        globalPlayerViewModel.selectPlayer(playerId)
+                                    }
                                 )
                             }
                             composable<Screen.PlayerList> { 
