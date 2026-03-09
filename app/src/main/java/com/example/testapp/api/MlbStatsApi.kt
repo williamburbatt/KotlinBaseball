@@ -276,7 +276,7 @@ data class Play(
 data class PlayResult(
     val type: String? = null,
     val event: String? = null,
-    val description: String?,
+    val description: String? = null,
     val rbi: Int? = null
 )
 

@@ -22,7 +22,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
         // Faster build by only targeting current device architecture during development
-        resConfigs("en", "xxhdpi")
+        resourceConfigurations += listOf("en", "xxhdpi")
     }
 
     buildTypes {
@@ -96,6 +96,9 @@ dependencies {
     // Coil
     implementation(libs.coil.compose)
     implementation(libs.coil.svg)
+
+    // Kotlinx Datetime
+    implementation(libs.kotlinx.datetime)
 
     // Baseline Profile
     implementation("androidx.profileinstaller:profileinstaller:1.4.1")

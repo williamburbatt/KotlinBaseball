@@ -16,8 +16,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import javax.inject.Inject
 
 data class BoxScoreUiState(
@@ -52,16 +53,19 @@ class BoxScoreViewModel @Inject constructor(
         refreshJob?.cancel()
         refreshJob = viewModelScope.launch {
             repository.getLiveGameData(gameId)
-                .combine(repository.getPlaybyPlayData(gameId)){gameData, plays -> Pair(gameData,plays)}
-                    .collect { (gameData, plays) ->
-                        _uiState.value = _uiState.value.copy(
-                    boxscore = gameData.boxscore,
-                    linescore = gameData.linescore,
-                    playByPlay = plays,
-                    isLoading = false,
-                    lastUpdated = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
-                )
-            }
+                .combine(repository.getPlaybyPlayData(gameId)) { gameData, plays -> Pair(gameData, plays) }
+                .collect { (gameData, plays) ->
+                    val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+                    val timestamp = "${now.hour.toString().padStart(2, '0')}:${now.minute.toString().padStart(2, '0')}:${now.second.toString().padStart(2, '0')}"
+                    
+                    _uiState.value = _uiState.value.copy(
+                        boxscore = gameData.boxscore,
+                        linescore = gameData.linescore,
+                        playByPlay = plays,
+                        isLoading = false,
+                        lastUpdated = timestamp
+                    )
+                }
         }
     }
 
