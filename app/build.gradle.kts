@@ -43,17 +43,20 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-        freeCompilerArgs += listOf(
+    buildFeatures {
+        compose = true
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+        freeCompilerArgs.addAll(
             "-P",
             "plugin:androidx.compose.compiler.plugins.kotlin:featureFlag=StrongSkipping",
             // Enable incremental compilation
             "-Xbackend-threads=4"
         )
-    }
-    buildFeatures {
-        compose = true
     }
 }
 
@@ -99,6 +102,9 @@ dependencies {
 
     // Kotlinx Datetime
     implementation(libs.kotlinx.datetime)
+
+    // DataStore
+    implementation(libs.androidx.datastore.preferences)
 
     // Baseline Profile
     implementation("androidx.profileinstaller:profileinstaller:1.4.1")
