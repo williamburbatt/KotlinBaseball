@@ -18,9 +18,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,15 +28,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.testapp.ui.navigation.NavTransitions
 import com.example.testapp.ui.navigation.Screen
-import com.example.testapp.ui.screens.BoxScoreScreen
+import com.example.testapp.ui.navigation.gamesGraph
+import com.example.testapp.ui.navigation.leadersGraph
+import com.example.testapp.ui.navigation.searchGraph
+import com.example.testapp.ui.navigation.teamsGraph
 import com.example.testapp.ui.screens.DetailedPlayerCard
-import com.example.testapp.ui.screens.GameListScreen
-import com.example.testapp.ui.screens.LeadersScreen
 import com.example.testapp.ui.screens.MainHubScreen
-import com.example.testapp.ui.screens.PlayerListScreen
-import com.example.testapp.ui.screens.PlayerSearchScreen
-import com.example.testapp.ui.screens.SportSelectionScreen
-import com.example.testapp.ui.screens.TeamListScreen
 import com.example.testapp.ui.theme.TestAppTheme
 import com.example.testapp.ui.viewmodels.PlayerViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -79,64 +73,15 @@ class MainActivity : ComponentActivity() {
                                     onTeamsClick = { navController.navigate(Screen.SportSelection) },
                                     onGamesClick = { navController.navigate(Screen.GameList) },
                                     onSearchClick = { navController.navigate(Screen.PlayerSearch) },
-                                    onLeadersClick = {navController.navigate(Screen.Leaders)}
+                                    onLeadersClick = { navController.navigate(Screen.Leaders) }
                                 )
                             }
-                            composable<Screen.PlayerSearch> {
-                                PlayerSearchScreen(
-                                    onPlayerClick = { playerId ->
-                                        globalPlayerViewModel.selectPlayer(playerId)
-                                    },
-                                    onBack = { navController.popBackStack() }
-                                )
-                            }
-                            composable<Screen.SportSelection> {
-                                SportSelectionScreen(onSportClick = { sportId ->
-                                    navController.navigate(Screen.TeamList(sportId))
-                                })
-                            }
-                            composable<Screen.TeamList> { 
-                                TeamListScreen(
-                                    onTeamClick = { teamId ->
-                                        navController.navigate(Screen.PlayerList(teamId))
-                                    },
-                                    sharedTransitionScope = this@SharedTransitionLayout,
-                                    animatedVisibilityScope = this@composable
-                                )
-                            }
-                            composable<Screen.Leaders> {
-                                LeadersScreen(
-                                    onBack = { navController.popBackStack() },
-                                    onPlayerClick = { playerId ->
-                                        globalPlayerViewModel.selectPlayer(playerId)
-                                    }
-                                )
-                            }
-                            composable<Screen.PlayerList> { 
-                                PlayerListScreen(
-                                    sharedTransitionScope = this@SharedTransitionLayout,
-                                    animatedVisibilityScope = this@composable
-                                )
-                            }
-                            composable<Screen.GameList> {
-                                GameListScreen(onGameClick = { game ->
-                                    navController.navigate(
-                                        Screen.BoxScore(
-                                            gameId = game.id,
-                                            awayTeam = game.awayTeam,
-                                            homeTeam = game.homeTeam
-                                        )
-                                    )
-                                })
-                            }
-                            composable<Screen.BoxScore> {
-                                BoxScoreScreen(
-                                    onBack = { navController.popBackStack() },
-                                    onPlayerClick = { playerId ->
-                                        globalPlayerViewModel.selectPlayer(playerId)
-                                    }
-                                )
-                            }
+                            
+                            // Modular Features
+                            teamsGraph(navController, this@SharedTransitionLayout)
+                            gamesGraph(navController, globalPlayerViewModel)
+                            searchGraph(navController, globalPlayerViewModel)
+                            leadersGraph(navController, globalPlayerViewModel)
                         }
                     }
 
